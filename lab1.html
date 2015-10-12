@@ -1,0 +1,55 @@
+<!Doctype html>
+<head>
+	<script src="lab1.js"></script>
+	<script src="./common/gl-matrix.js"></script>
+	<script src="./common/webgl-utils.js"></script>
+	<script src="./common/initShaders.js"></script>
+	
+	<script id="vertex-shader" type="x-shader/x-vertex">
+	attribute vec4 vPosition;
+
+	void
+	main()
+	{
+		mat4 rz = mat4( 1, 0, 0.0, 0.0,
+				0,  1, 0.0, 0.0,
+				0.0,  0.0, 0, 0.0,
+				0.0,  0.0, 0.0, 0 );
+		
+		
+		vec4 sc = vec4(0.1, 0.1, 1, 1);
+		
+	//	scale( rz, sc );
+		
+	/*	var scale = 0.5;
+		
+		rz = rz * mat4( scale, 0, 0.0, 0.0,
+				0,  scale, 0.0, 0.0,
+				0.0,  0.0, 1, 0.0,
+				0.0,  0.0, 0.0, 1 );
+	*/	
+		gl_PointSize = 1.0;
+		gl_Position = sc * vPosition;
+	}
+	</script>
+
+
+	<script id="fragment-shader" type="x-shader/x-fragment">
+	precision mediump float;
+
+	void
+	main()
+	{
+		gl_FragColor = vec4( 0.3, 0.8, 0.3, 1.0 );
+	}
+	</script>
+
+
+</head>
+
+
+<body onload="webGLstart();">
+	<canvas id="glCanvas" width="500" height="500">
+		Your browser doesn't appear to support the HTML5
+	</canvas>
+</body>
