@@ -7,6 +7,7 @@ var vertices = [];
 var modelViewMatrixLoc;
 var modelViewMatrix;
 
+var theta = 0;
 
 function webGLstart()
 {
@@ -35,64 +36,50 @@ function webGLstart()
 	/**
 	 * construct tetris elements with triangles
 	 */
-	var square = [
+/*	var square = [
 			vec2.fromValues(-1, -1), vec2.fromValues(-1, 1), vec2.fromValues(1, -1),
 			vec2.fromValues(-1, 1), vec2.fromValues(1, -1), vec2.fromValues(1, 1) ];	
 	for( var i = 0; i < square.length; i++ )
 		for( var j = 0; j < DIMENSIONS; j++ )
 			vertices.push(square[i][j]);
-//	{
-//		vertices.push(square[i]);
-//		vertices.push(square[i][0]);
-//		vertices.push(square[i][1]);
-//		console.log("square i: " + square[i] ); 
-//	}
-	
-/*	vertices = [
-			-1.0, -1.0, -1.0, 1.0, 1.0, -1.0,
-			-1.0, 1.0, 1.0, -1.0, 1.0, 1.0
-			];
 */	
-	for( var i = 0; i < vertices.length; i++ )
-	{
-		console.log("vertices[" + i + "]: " + vertices[i] );
-//		console.log("vertices[" + i + "][1]: " + vertices[i][1] );
-	}
+//	for( var i = 0; i < vertices.length; i++ )
+//		console.log("vertices[" + i + "]: " + vertices[i] );
 		
 /*	var iBlock = [
-			vec2(-0.5, -2), vec2(-0.5, 2), vec2(0.5, -2),
-			vec2(-0.5, 2), vec2(0.5, -2), vec2(0.5, 2) ];
-*/
-//	for( var i = 0; i < iBlock.length; i++ )
-//		vertices.push(iBlock[i]);
-	
-/*	var podium = [
-			vec2(-1.5,-1), vec2(-1.5, 0), vec2(1.5, -1),
-			vec2(-1.5, 0), vec2(1.5, -1), vec2(1.5, 0),
-			vec2(-0.5, 0), vec2(-0.5, 1), vec2(0.5, 0),
-			vec2(-0.5, 1), vec2(0.5, 0), vec2(0.5, 1) ];	
-*/
-//	for( var i = 0; i < podium.length; i++ )
-//		vertices.push(podium[i]);
+			vec2.fromValues(-0.5, -2), vec2.fromValues(-0.5, 2), vec2.fromValues(0.5, -2),
+			vec2.fromValues(-0.5, 2), vec2.fromValues(0.5, -2), vec2.fromValues(0.5, 2) ];
+	for( var i = 0; i < iBlock.length; i++ )
+		for( var j = 0; j < DIMENSIONS; j++ )
+			vertices.push(iBlock[i][j]);
+*/	
+	var podium = [
+			vec2.fromValues(-1.5,-1), vec2.fromValues(-1.5, 0), vec2.fromValues(1.5, -1),
+			vec2.fromValues(-1.5, 0), vec2.fromValues(1.5, -1), vec2.fromValues(1.5, 0),
+			vec2.fromValues(-0.5, 0), vec2.fromValues(-0.5, 1), vec2.fromValues(0.5, 0),
+			vec2.fromValues(-0.5, 1), vec2.fromValues(0.5, 0), vec2.fromValues(0.5, 1) ];	
+	for( var i = 0; i < podium.length; i++ )
+		for( var j = 0; j < DIMENSIONS; j++ )
+			vertices.push(podium[i][j]);
 	
 /*	var zBlock = [
-			vec2(-1.5, -1), vec2(-1.5, 0), vec2(0.5, -1),
-			vec2(-1.5, 0), vec2(0.5, -1), vec2(0.5, 0),
-			vec2(-0.5, 0), vec2(-0.5, 1), vec2(1.5, 0),
-			vec2(-0.5, 1), vec2(1.5, 0), vec2(1.5, 1) ];
+			vec.fromValues2(-1.5, -1), vec2.fromValues(-1.5, 0), vec2.fromValues(0.5, -1),
+			vec2.fromValues(-1.5, 0), vec2.fromValues(0.5, -1), vec2.fromValues(0.5, 0),
+			vec2.fromValues(-0.5, 0), vec2.fromValues(-0.5, 1), vec2.fromValues(1.5, 0),
+			vec2.fromValues(-0.5, 1), vec2.fromValues(1.5, 0), vec2.fromValues(1.5, 1) ];
+	for( var i = 0; i < zBlock.length; i++ )
+		for( var j = 0; j < DIMENSIONS; j++ )
+			vertices.push(zBlock[i][j]);
 */
-//	for( var i = 0; i < zBlock.length; i++ )
-//		vertices.push(zBlock[i]);
-		
 /*	var lBlock = [
-			vec2(-1, -1.5), vec2(-1, 1.5), vec2(0, -1.5),
-			vec2(-1, 1.5), vec2(0, -1.5), vec2(0, 1.5),
-			vec2(0, -1.5), vec2(0, -0.5), vec2(1, -1.5),
-			vec2(0, -0.5), vec2(1, -1.5), vec2(1, -0.5) ];			
-*/
-//	for( var i = 0; i < lBlock.length; i++ )
-//		vertices.push(lBlock[i]);
-	
+			vec2.fromValues(-1, -1.5), vec2.fromValues(-1, 1.5), vec2.fromValues(0, -1.5),
+			vec2.fromValues(-1, 1.5), vec2.fromValues(0, -1.5), vec2.fromValues(0, 1.5),
+			vec2.fromValues(0, -1.5), vec2.fromValues(0, -0.5), vec2.fromValues(1, -1.5),
+			vec2.fromValues(0, -0.5), vec2.fromValues(1, -1.5), vec2.fromValues(1, -0.5) ];
+	for( var i = 0; i < lBlock.length; i++ )
+		for( var j = 0; j < DIMENSIONS; j++ )
+			vertices.push(lBlock[i][j]);
+*/	
 
 	/**
 	 * Load the data into the GPU
@@ -123,9 +110,40 @@ function webGLstart()
 	/**
 	 * modelView transformations (scale, and translate)
 	 */
-	modelViewMatrix = mat4.create();	
-	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(0.1,0.1,1));
-	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(-4,0,0));
+
+	
+	/**
+	 * event listener in case of button press
+	 */
+	document.addEventListener("keydown", function(event) {
+				switch(event.keyCode)
+				{
+					case 37:	// arrow left
+							theta += Math.PI/2;
+							console.log("pressed left");
+							break;							
+					case 38:	// arrow up
+							break;
+					case 39:	// arrow right
+							theta -= Math.PI/2;
+							console.log("pressed right");
+							break;
+					case 40: 	// arrow down					
+							break;
+				}
+			} );
+			
+//	modelViewMatrix = mat4.create();	
+//	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(0.1,0.1,1));
+//	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(-4,0,0));
+//	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
+	
+	
+	document.getElementById( "xButton" ).onclick = function () 
+	{
+		theta = 0.05; 
+	};
+			
 	
 	render();
 }
@@ -139,13 +157,20 @@ function render()
 	 * modelView transformations (rotate around z axis) 
 	 * -> the transformation here causes a constant spinning
 	 */
-	mat4.rotateZ(modelViewMatrix, modelViewMatrix, 0.01);
+//	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
+
+	modelViewMatrix = mat4.create();	
+	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(0.1,0.1,1));
+	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(-4,0,0));
+	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
+	
+
 	
 	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(modelViewMatrix));
 	
 //	gl.drawArrays( gl.TRIANGLES, 0, verticesLength );
 	/// TODO: noch einen weg finden das die verticesLength hier übergeben wird ohne in funktion zu übergeben
-	gl.drawArrays( gl.TRIANGLES, 0, 6 );
+	gl.drawArrays( gl.TRIANGLES, 0, 12 );
 	
 	/**
 	 * request browser to display the rendering the next time it wants to refresh the display
