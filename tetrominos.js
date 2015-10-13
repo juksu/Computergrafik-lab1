@@ -84,15 +84,16 @@ function spawnLBlock()
 	return vertices;
 }
 
+///TODO gespiegeltes L und z fehlen noch!
+
+
 function spawnRandom()
 {
 	var random = Math.floor(Math.random() * 5);
-//	var random = 0;
-
 	
 	switch(random)
 	{
-		case 0: return spawnSquare(vertices);
+		case 0: return spawnSquare();
 		case 1:	return spawnIBlock();
 		case 2: return spawnPodium();
 		case 3: return spawnLBlock();

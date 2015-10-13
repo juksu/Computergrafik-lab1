@@ -48,9 +48,11 @@
 	<button id= "xButton">Rotate X</button>
 	
 	<p>
-		Width of playing field (in Blocks): <br/>
+		Width of playing field (in Blocks):
+		<span id="scalarSliderValue">10</span>  <br/>
+		Changing this value will reset the playing field.
 		<input id="scalarSlide" type="range" min="4" max="40" step="2" value="10" onchange="setScalar(this.value)"/>
-		<span id="scalarSliderValue">10</span>
+		
 	</p>
 	
 	</body>
