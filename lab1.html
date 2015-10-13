@@ -7,6 +7,7 @@
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 		
 		<script src="lab1.js"></script>
+		<script src="tetrominos.js"></script>
 		<script src="./common/gl-matrix.js"></script>
 		<script src="./common/webgl-utils.js"></script>
 		<script src="./common/initShaders.js"></script>
@@ -40,11 +41,17 @@
 
 
 	<body onload="webGLstart();" keydown="handleKeys();">
-		<canvas id="glCanvas" width="500" height="500">
+		<canvas id="glCanvas" width="400" height="800">
 			Your browser doesn't appear to support the HTML5
 		</canvas>
 	
 	<button id= "xButton">Rotate X</button>
+	
+	<p>
+		Width of playing field (in Blocks): <br/>
+		<input id="scalarSlide" type="range" min="4" max="40" step="2" value="10" onchange="setScalar(this.value)"/>
+		<span id="scalarSliderValue">10</span>
+	</p>
 	
 	</body>
 </html>

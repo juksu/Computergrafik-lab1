@@ -2,12 +2,25 @@
 
 
 var DIMENSIONS = 2;
+var aspectRatio = 1;
 var gl;
 var vertices = [];
+
 var modelViewMatrixLoc;
 var modelViewMatrix;
-
+var scalar = 2/10;
 var theta = 0;
+var xTranslate = 0;
+var yTranslate = 0;
+
+var tetrominos = [];
+
+function tetromino( vertices, mvMatrix )
+{
+	this.vertices = vertices;
+	this.verticesLength = vertices.length/DIMENSIONS;
+	this.mvMatrix = mvMatrix;	
+}
 
 function webGLstart()
 {
@@ -22,10 +35,10 @@ function webGLstart()
 	 * Configure Webgl
 	 */
 	gl.viewport( 0, 0, canvas.width, canvas.height );
-	
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	
 	gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+
+	aspectRatio = canvas.width/canvas.height;
 
 	/**
 	 * Load shaders and initialize attribute buffers
@@ -53,7 +66,7 @@ function webGLstart()
 		for( var j = 0; j < DIMENSIONS; j++ )
 			vertices.push(iBlock[i][j]);
 */	
-	var podium = [
+/*	var podium = [
 			vec2.fromValues(-1.5,-1), vec2.fromValues(-1.5, 0), vec2.fromValues(1.5, -1),
 			vec2.fromValues(-1.5, 0), vec2.fromValues(1.5, -1), vec2.fromValues(1.5, 0),
 			vec2.fromValues(-0.5, 0), vec2.fromValues(-0.5, 1), vec2.fromValues(0.5, 0),
@@ -61,7 +74,7 @@ function webGLstart()
 	for( var i = 0; i < podium.length; i++ )
 		for( var j = 0; j < DIMENSIONS; j++ )
 			vertices.push(podium[i][j]);
-	
+*/	
 /*	var zBlock = [
 			vec.fromValues2(-1.5, -1), vec2.fromValues(-1.5, 0), vec2.fromValues(0.5, -1),
 			vec2.fromValues(-1.5, 0), vec2.fromValues(0.5, -1), vec2.fromValues(0.5, 0),
@@ -81,6 +94,8 @@ function webGLstart()
 			vertices.push(lBlock[i][j]);
 */	
 
+	vertices = spawnRandom();
+	
 	/**
 	 * Load the data into the GPU
 	 */
@@ -103,47 +118,9 @@ function webGLstart()
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
 	gl.enableVertexAttribArray( vPosition );
 
-
-
 	modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
-
-	/**
-	 * modelView transformations (scale, and translate)
-	 */
-
-	
-	/**
-	 * event listener in case of button press
-	 */
-	document.addEventListener("keydown", function(event) {
-				switch(event.keyCode)
-				{
-					case 37:	// arrow left
-							theta += Math.PI/2;
-							console.log("pressed left");
-							break;							
-					case 38:	// arrow up
-							break;
-					case 39:	// arrow right
-							theta -= Math.PI/2;
-							console.log("pressed right");
-							break;
-					case 40: 	// arrow down					
-							break;
-				}
-			} );
 			
-//	modelViewMatrix = mat4.create();	
-//	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(0.1,0.1,1));
-//	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(-4,0,0));
-//	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
-	
-	
-	document.getElementById( "xButton" ).onclick = function () 
-	{
-		theta = 0.05; 
-	};
-			
+	controls();
 	
 	render();
 }
@@ -151,26 +128,20 @@ function webGLstart()
 function render()
 {
 	gl.clear( gl.COLOR_BUFFER_BIT );
-	
 
 	/**
-	 * modelView transformations (rotate around z axis) 
-	 * -> the transformation here causes a constant spinning
+	 * modelView transformations (scale, translate and rotate around z axis)
 	 */
-//	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
-
 	modelViewMatrix = mat4.create();	
-	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(0.1,0.1,1));
-	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(-4,0,0));
+	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(scalar,scalar*aspectRatio,1));
+	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate,yTranslate,0));
 	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
-	
-
 	
 	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(modelViewMatrix));
 	
 //	gl.drawArrays( gl.TRIANGLES, 0, verticesLength );
 	/// TODO: noch einen weg finden das die verticesLength hier übergeben wird ohne in funktion zu übergeben
-	gl.drawArrays( gl.TRIANGLES, 0, 12 );
+	gl.drawArrays( gl.TRIANGLES, 0, vertices.length/DIMENSIONS );
 	
 	/**
 	 * request browser to display the rendering the next time it wants to refresh the display
@@ -178,3 +149,46 @@ function render()
 	 */
 	requestAnimFrame(render);
 }
+
+function controls()
+{
+	/**
+	 * event listener in case of button press
+	 */
+	document.addEventListener("keydown", function(event) {
+				switch(event.keyCode)
+				{
+					case 37:	// arrow left
+							xTranslate -= 1;
+							console.log("pressed left");
+							break;							
+					case 38:	// arrow up
+							yTranslate += 1;
+							break;
+					case 39:	// arrow right
+							xTranslate += 1;
+							console.log("pressed right");
+							break;
+					case 40: 	// arrow down					
+							yTranslate -= 1;
+							break;	
+					case 49: 	// 1
+							theta += Math.PI/2;
+							break;
+					case 51:	// 3
+							theta -= Math.PI/2;
+							break;
+					case 13:	// enter
+							///TODO spawn new tetroid
+							break;
+				}
+			} );	
+}
+
+function setScalar(sliderValue)
+{
+	scalar = 2/(sliderValue);
+	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
+}
+
+
