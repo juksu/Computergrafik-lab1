@@ -1,26 +1,44 @@
 "use strict";
 
-var DIMENSIONS = 2;
-var aspectRatio = 1;
-var gl;
-//var vertices = [];
+var DIMENSIONS = 2;		// dimension of vertices
+var COLORDIMENSIONS = 4;	// dimension of color vectors
 
+var aspectRatio;		// aspect ratio of canvas
+
+var gl;
 var modelViewMatrixLoc;
-var modelViewMatrix;
-var scalar = 2/10;
-var theta = 0;
-var xTranslate = 0;
-var yTranslate = 0;
+
+var modelViewMatrix;	
+
+var scalar = 2/10;		// initial value, scalar is changed with size of playing field
+var theta = 0;			// rotation
+var xTranslate = 0;		// move along x-axis
+var yTranslate = 0;		// move along y-axis
 
 var vPosition;
-var bufferHolder = [];
-var tetrominoHolder = [];
+var vertexBufferHolder = [];
+var vColor;
+var colorBufferHolder = [];
 
+var tetrominoHolder = [];
 function tetromino( vertices, modelViewMatrix )
 {
 	this.vertices = vertices;
-//	this.verticesLength = vertices.length/DIMENSIONS;
 	this.modelViewMatrix = modelViewMatrix;
+	var col = [];
+	
+	// i simply want to have onecolored tetrominos
+	// -> assign each vertex the same color value
+	// for some fancy rainbowcolor effects assign different colors to the vertices but I was told rainbowcolor is bad ;)
+	// should not be to bright or dark -> use only random values between 50 and 200
+	var col1 = (Math.floor(Math.random()*150)+50)/256;
+	var col2 = (Math.floor(Math.random()*150)+50)/256;
+	var col3 = (Math.floor(Math.random()*150)+50)/256;
+		
+	for (var i=0; i < vertices.length/DIMENSIONS; i++)
+		col = col.concat( [col1, col2, col3, 1.0 ] );
+    
+    this.color = col;
 }
 
 function webGLstart()
@@ -59,6 +77,10 @@ function webGLstart()
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
 	gl.enableVertexAttribArray( vPosition );
 
+	vColor = gl.getAttribLocation( program, "vColor" );
+	gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vColor );
+
 	modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
 			
 	controls();
@@ -84,16 +106,19 @@ function render()
 
 	for( var i = 0; i < tetrominoHolder.length; i++ )
 	{
-		gl.bindBuffer( gl.ARRAY_BUFFER, bufferHolder[i] );
+		gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[i] );
 		gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
 		
+		gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferHolder[i] );
+		gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );
+		
 		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[i].modelViewMatrix));
-	
-		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );	
+		
+		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );
 	}
 
 /*
-	gl.bindBuffer( gl.ARRAY_BUFFER, bufferHolder[bufferHolder.length - 1] );
+	gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[vertexBufferHolder.length - 1] );
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
 //	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].vertices), gl.STATIC_DRAW );
 
@@ -155,7 +180,7 @@ function setScalar(sliderValue)
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
 	tetrominoHolder = [];
-	bufferHolder = [];
+	vertexBufferHolder = [];
 
 	theta = 0;
 	xTranslate = 0;
@@ -179,15 +204,20 @@ function addTetromino()
 	}
 	
 	tetrominoHolder.push(new tetromino(spawnRandom(), mat4.create()));
-	console.log("tetrominoHolder.length: " + tetrominoHolder.length );
-	console.log("tetrominoHolder[" + (tetrominoHolder.length-1) + "].vertices.length: " + tetrominoHolder[tetrominoHolder.length-1].vertices.length );							
+//	console.log("tetrominoHolder.length: " + tetrominoHolder.length );
+//	console.log("tetrominoHolder[" + (tetrominoHolder.length-1) + "].vertices.length: " + tetrominoHolder[tetrominoHolder.length-1].vertices.length );							
+//	console.log("tetrominoHolder[" + (tetrominoHolder.length-1) + "].color.length: " + tetrominoHolder[tetrominoHolder.length-1].color.length );							
 	
 	/**
 	 * Load the data into the GPU
 	 */
-	bufferHolder.push(gl.createBuffer());
-	gl.bindBuffer( gl.ARRAY_BUFFER, bufferHolder[bufferHolder.length - 1] );
+	vertexBufferHolder.push(gl.createBuffer());
+	gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[vertexBufferHolder.length - 1] );
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].vertices), gl.STATIC_DRAW );	
+	
+	colorBufferHolder.push(gl.createBuffer());
+	gl.bindBuffer( gl.ARRAY_BUFFER, colorBufferHolder[colorBufferHolder.length - 1] );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].color), gl.STATIC_DRAW );
 }
 
 

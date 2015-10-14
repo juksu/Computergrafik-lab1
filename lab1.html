@@ -15,30 +15,31 @@
 		<script id="vertex-shader" type="x-shader/x-vertex">
 			
 			attribute vec4 vPosition;
+			attribute vec4 vColor;
+			
 			uniform mat4 modelViewMatrix;
+			varying vec4 fColor;
 
 			void main()
 			{
 				gl_Position = modelViewMatrix * vPosition;
+				fColor = vColor;
 			}
 			
 		</script>
-
 
 		<script id="fragment-shader" type="x-shader/x-fragment">
 			
 			precision mediump float;
 			
-			varying vec4 vColor;
+			varying vec4 fColor;
 
 			void main()
 			{
-				gl_FragColor = vec4( 0.3, 0.8, 0.3, 1.0 );
-//				gl_FragColor = vColor;
+				gl_FragColor = fColor;
 			}
 			
 		</script>
-
 
 	</head>
 
@@ -48,14 +49,11 @@
 			Your browser doesn't appear to support the HTML5
 		</canvas>
 	
-	<button id= "xButton">Rotate X</button>
-	
 	<p>
 		Width of playing field (in Blocks):
 		<span id="scalarSliderValue">10</span>  <br/>
 		Changing this value will reset the playing field.
-		<input id="scalarSlide" type="range" min="4" max="40" step="2" value="10" onchange="setScalar(this.value)"/>
-		
+		<input id="scalarSlide" type="range" min="4" max="40" step="2" value="10" onchange="setScalar(this.value)"/>		
 	</p>
 	
 	</body>
