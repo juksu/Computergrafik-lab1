@@ -142,8 +142,8 @@ function render()
 	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate,yTranslate,0));
 	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
 	
-	///TODO different approach, instead of calculating the modelViewMatrix from identity all the time, only calculate the change to the previous one
-	
+	/// TODO different approach, instead of calculating the modelViewMatrix from identity all the time, only calculate the change to the previous one
+	/// TODO color!
 	
 	tetrominoHolder[tetrominoHolder.length - 1].modelViewMatrix = modelViewMatrix;
 
