@@ -1,5 +1,7 @@
 	/**
 	 * construct tetris elements with triangles
+	 * we want to have the vertices only on the corners of the block in order to have aligned objects
+	 * round the vector values pushed to vertices to achive that
 	 */
 function spawnSquare()
 {
@@ -28,7 +30,7 @@ function spawnIBlock()
 			vec2.fromValues(-0.5, 2), vec2.fromValues(0.5, -2), vec2.fromValues(0.5, 2) ];
 	for( var i = 0; i < iBlock.length; i++ )
 		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(iBlock[i][j]);
+			vertices.push(Math.round(iBlock[i][j]));
 	
 	return vertices;
 }
@@ -45,7 +47,7 @@ function spawnPodium()
 
 	for( var i = 0; i < podium.length; i++ )
 		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(podium[i][j]);
+			vertices.push(Math.round(podium[i][j]));
 
 	return vertices;
 }
@@ -62,7 +64,7 @@ function spawnZBlock()
 	
 	for( var i = 0; i < zBlock.length; i++ )
 		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(zBlock[i][j]);
+			vertices.push(Math.round(zBlock[i][j]));
 			
 	return vertices;
 }
@@ -79,7 +81,7 @@ function spawnLBlock()
 
 	for( var i = 0; i < lBlock.length; i++ )
 		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(lBlock[i][j]);
+			vertices.push(Math.round(lBlock[i][j]));
 	
 	return vertices;
 }

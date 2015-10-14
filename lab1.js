@@ -1,6 +1,5 @@
 "use strict";
 
-
 var DIMENSIONS = 2;
 var aspectRatio = 1;
 var gl;
@@ -21,7 +20,7 @@ function tetromino( vertices, modelViewMatrix )
 {
 	this.vertices = vertices;
 //	this.verticesLength = vertices.length/DIMENSIONS;
-	this.modelViewMatrix = modelViewMatrix;	
+	this.modelViewMatrix = modelViewMatrix;
 }
 
 function webGLstart()
@@ -47,79 +46,15 @@ function webGLstart()
 	 */
 	var program = initShaders( gl, "vertex-shader", "fragment-shader" );
 	gl.useProgram( program );	
-		
+
 	/**
-	 * construct tetris elements with triangles
+	 * add first object
 	 */
-/*	var square = [
-			vec2.fromValues(-1, -1), vec2.fromValues(-1, 1), vec2.fromValues(1, -1),
-			vec2.fromValues(-1, 1), vec2.fromValues(1, -1), vec2.fromValues(1, 1) ];	
-	for( var i = 0; i < square.length; i++ )
-		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(square[i][j]);
-*/	
-//	for( var i = 0; i < vertices.length; i++ )
-//		console.log("vertices[" + i + "]: " + vertices[i] );
-		
-/*	var iBlock = [
-			vec2.fromValues(-0.5, -2), vec2.fromValues(-0.5, 2), vec2.fromValues(0.5, -2),
-			vec2.fromValues(-0.5, 2), vec2.fromValues(0.5, -2), vec2.fromValues(0.5, 2) ];
-	for( var i = 0; i < iBlock.length; i++ )
-		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(iBlock[i][j]);
-*/	
-/*	var podium = [
-			vec2.fromValues(-1.5,-1), vec2.fromValues(-1.5, 0), vec2.fromValues(1.5, -1),
-			vec2.fromValues(-1.5, 0), vec2.fromValues(1.5, -1), vec2.fromValues(1.5, 0),
-			vec2.fromValues(-0.5, 0), vec2.fromValues(-0.5, 1), vec2.fromValues(0.5, 0),
-			vec2.fromValues(-0.5, 1), vec2.fromValues(0.5, 0), vec2.fromValues(0.5, 1) ];	
-	for( var i = 0; i < podium.length; i++ )
-		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(podium[i][j]);
-*/	
-/*	var zBlock = [
-			vec.fromValues2(-1.5, -1), vec2.fromValues(-1.5, 0), vec2.fromValues(0.5, -1),
-			vec2.fromValues(-1.5, 0), vec2.fromValues(0.5, -1), vec2.fromValues(0.5, 0),
-			vec2.fromValues(-0.5, 0), vec2.fromValues(-0.5, 1), vec2.fromValues(1.5, 0),
-			vec2.fromValues(-0.5, 1), vec2.fromValues(1.5, 0), vec2.fromValues(1.5, 1) ];
-	for( var i = 0; i < zBlock.length; i++ )
-		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(zBlock[i][j]);
-*/
-/*	var lBlock = [
-			vec2.fromValues(-1, -1.5), vec2.fromValues(-1, 1.5), vec2.fromValues(0, -1.5),
-			vec2.fromValues(-1, 1.5), vec2.fromValues(0, -1.5), vec2.fromValues(0, 1.5),
-			vec2.fromValues(0, -1.5), vec2.fromValues(0, -0.5), vec2.fromValues(1, -1.5),
-			vec2.fromValues(0, -0.5), vec2.fromValues(1, -1.5), vec2.fromValues(1, -0.5) ];
-	for( var i = 0; i < lBlock.length; i++ )
-		for( var j = 0; j < DIMENSIONS; j++ )
-			vertices.push(lBlock[i][j]);
-*/	
-
-	console.log("tetrominoHolder.length: " + tetrominoHolder.length );
-
-	tetrominoHolder.push(new tetromino(spawnRandom(), mat4.create()));
-	
-	console.log("tetrominoHolder.length: " + tetrominoHolder.length );
-	console.log("tetrominoHolder[last].vertices.length: " + tetrominoHolder[tetrominoHolder.length-1].vertices.length );
-	
-	/**
-	 * Load the data into the GPU
-	 */
-/*	var bufferId = gl.createBuffer();
-	gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].vertices), gl.STATIC_DRAW );
-*/
-
-	bufferHolder.push(gl.createBuffer());
-	gl.bindBuffer( gl.ARRAY_BUFFER, bufferHolder[bufferHolder.length - 1] );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].vertices), gl.STATIC_DRAW );	
+	addTetromino();
 
 	/**
 	 * Associate out shader variables with our data buffer
 	 */
-	/// TODO dieser Teil vielleicht in render? siehe learning webgl lesson1
-//	var vPosition = gl.getAttribLocation( program, "vPosition" );
 	vPosition = gl.getAttribLocation( program, "vPosition" );
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
 	gl.enableVertexAttribArray( vPosition );
@@ -210,20 +145,7 @@ function controls()
 							break;
 					case 13:	// enter
 							addTetromino();
-
-/*							tetrominoHolder.push(new tetromino(spawnRandom(), mat4.create()));
-							console.log("tetrominoHolder.length: " + tetrominoHolder.length );
-							console.log("tetrominoHolder[" + (tetrominoHolder.length-1) + "].vertices.length: " + tetrominoHolder[tetrominoHolder.length-1].vertices.length );							
-							
-							///TODO bindbuffer
-//							bufferHolder[0] = gl.createBuffer();
-							bufferHolder.push(gl.createBuffer());
-							gl.bindBuffer( gl.ARRAY_BUFFER, bufferHolder[bufferHolder.length - 1] );
-							gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].vertices), gl.STATIC_DRAW );	
-
-
-							break;
-*/				}
+				}
 			} );	
 }
 
@@ -231,25 +153,21 @@ function setScalar(sliderValue)
 {
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
-	
-//	delete tetrominoHolder;
-//	delete bufferHolder;
+
 	tetrominoHolder = [];
 	bufferHolder = [];
-	
-//	webGLstart();
 
 	theta = 0;
 	xTranslate = 0;
 	yTranslate = 0;
-	addTetromino();
-	
+	addTetromino();	
 }
 
 function addTetromino()
 {
 	// a new tetromino is added. however only the newest tetromino is active (can be moved)
 	// calculate a final modelViewMatrix for the old tetromino so that it stays in its state and we save calculations
+	///TODO if scale, translate and rotate only always express change in it (see idea in render), this part is unnecessar 
 	if( tetrominoHolder.length != 0 )
 	{
 		modelViewMatrix = mat4.create();	
@@ -264,6 +182,9 @@ function addTetromino()
 	console.log("tetrominoHolder.length: " + tetrominoHolder.length );
 	console.log("tetrominoHolder[" + (tetrominoHolder.length-1) + "].vertices.length: " + tetrominoHolder[tetrominoHolder.length-1].vertices.length );							
 	
+	/**
+	 * Load the data into the GPU
+	 */
 	bufferHolder.push(gl.createBuffer());
 	gl.bindBuffer( gl.ARRAY_BUFFER, bufferHolder[bufferHolder.length - 1] );
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].vertices), gl.STATIC_DRAW );	
