@@ -8,14 +8,15 @@ var aspectRatio;		// aspect ratio of canvas
 var gl;
 var modelViewMatrixLoc;
 
-var modelViewMatrix;
+//var modelViewMatrix;
 
 var rotate = false;
-var rotateLeft = false;
+var rotateCCW = false;
+var rotateCW = false;
 var translate = false;	
 
 var scalar = 2/10;		// initial value, scalar is changed with size of playing field
-var theta = 0.1;			// rotation
+var theta = 0;			// rotation
 var deltaTheta = 0;
 var xTranslate = 0;		// move along x-axis
 var deltaXTranslate = 0;
@@ -125,34 +126,21 @@ function render()
 		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );
 	}
 	
+
+	// do the last tetromino	
+	// rotation
+	if( rotateCCW === true )
+		rotateCounterClockwise();
+	else if( rotateCW === true )
+		rotateClockwise();
+	else
+		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix));
 	
-	// do the last tetromino
-	if( rotateLeft == true )
-	{
-		deltaTheta += 0.01;
-		var tempMV = [];
-		if( deltaTheta <= theta )
-		{
-			gl.uniformMatrix4fv(modelViewMatrixLoc, false, 
-					new Float32Array(mat4.rotateZ(
-							tempMV, tetrominoHolder[i].modelViewMatrix, deltaTheta)));
-		}
-		// rotation ended, calculate new modelViewMatrix, use theta to avoid errors
-		else
-		{
-			mat4.rotateZ(tetrominoHolder[i].modelViewMatrix, tetrominoHolder[i].modelViewMatrix, theta);
-			rotate = false;
-			deltaTheta = 0;
-		}
-	}
-	
-	gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[tetrominoHolder.length-1] );
+	gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[vertexBufferHolder.length-1] );
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
 	
-	gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferHolder[tetrominoHolder.length-1] );
+	gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferHolder[colorBufferHolder.length-1] );
 	gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );
-	
-	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix));
 	
 	gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[tetrominoHolder.length-1].vertices.length/DIMENSIONS );	
 	
@@ -213,12 +201,26 @@ function controls()
 							yTranslate -= 1;
 							break;	
 					case 49: 	// 1
-							rotateLeft = true;
-							theta += Math.PI/2;
+							// changing rotation while rotation in other direction is in progress 
+							// does rotate tetromino back to original angle
+							rotateCCW = true;
+							if( rotateCW )
+							{
+								rotateCW = false;
+								theta = 0;
+							}
+							theta = Math.PI/2;
 							break;
 					case 51:	// 3
-							rotate = true;
-							theta -= Math.PI/2;
+							// changing rotation while rotation in other direction is in progress 
+							// does rotate tetromino back to original angle
+							rotateCW = true;
+							if( !rotateCCW )
+							{
+								rotateCCW = false;
+								theta = 0;
+							}
+							theta = -Math.PI/2;
 							break;
 					case 13:	// enter
 							addTetromino();
@@ -295,6 +297,51 @@ function addTetromino()
 	colorBufferHolder.push(gl.createBuffer());
 	gl.bindBuffer( gl.ARRAY_BUFFER, colorBufferHolder[colorBufferHolder.length - 1] );
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].color), gl.STATIC_DRAW );
+}
+
+function rotateCounterClockwise()
+{
+	deltaTheta += 0.1;
+	var tempMV = [];
+	if( deltaTheta < theta )
+	{
+		// use but don't change the modelViewMatrix from the tetrominoHolder to calculate rotation
+		gl.uniformMatrix4fv(modelViewMatrixLoc, false, 
+				new Float32Array(mat4.rotateZ(
+						tempMV, tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix, deltaTheta)));
+	}
+	// rotation ended, calculate new (final) modelViewMatrix, use theta to avoid numeric errors
+	else
+	{
+		mat4.rotateZ(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix, tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix, theta);
+		rotateCCW = false;
+		deltaTheta = 0;
+		theta = 0;
+		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix));
+	}
+	
+}
+
+function rotateClockwise()
+{
+	deltaTheta -= 0.1;
+	var tempMV = [];
+	if( deltaTheta > theta )
+	{
+		// use but don't change the modelViewMatrix from the tetrominoHolder to calculate rotation
+		gl.uniformMatrix4fv(modelViewMatrixLoc, false, 
+				new Float32Array(mat4.rotateZ(
+						tempMV, tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix, deltaTheta)));
+	}
+	// rotation ended, calculate new (final) modelViewMatrix, use theta to avoid numeric errors
+	else
+	{
+		mat4.rotateZ(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix, tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix, theta);
+		rotateCW = false;
+		deltaTheta = 0;
+		theta = 0;
+		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix));
+	}
 }
 
 
