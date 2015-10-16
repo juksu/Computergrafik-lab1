@@ -10,10 +10,12 @@ var modelViewMatrixLoc;
 
 //var modelViewMatrix;
 
-var rotate = false;
-var rotateCCW = false;
-var rotateCW = false;
-var translate = false;	
+var rotate = 0;
+var moveX = 0;
+var moveY = 0;
+//var rotateCCW = false;
+//var rotateCW = false;
+//var translate = false;	
 
 var scalar = 2/10;		// initial value, scalar is changed with size of playing field
 var theta = 0;			// rotation
@@ -125,14 +127,9 @@ function render()
 		
 		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );
 	}
-	
 
-	// do the last tetromino	
-	// rotation
-	if( rotateCCW === true )
-		rotateCounterClockwise();
-	else if( rotateCW === true )
-		rotateClockwise();
+	if( (rotate || moveX || moveY) )
+		move();
 	else
 		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix));
 	
@@ -187,40 +184,56 @@ function controls()
 				switch(event.keyCode)
 				{
 					case 37:	// arrow left
-							xTranslate -= 1;
+							if( moveX == 1 )
+								xTranslate = 0;
+							else
+								xTranslate = -1;
+							moveX = -1;
 							console.log("pressed left");
 							break;							
 					case 38:	// arrow up
-							yTranslate += 1;
+							if( moveY == -1 )
+								yTranslate = 0;
+							else
+								yTranslate = 1;
+							moveY = 1;
+							console.log("pressed up");
 							break;
 					case 39:	// arrow right
-							xTranslate += 1;
+							if( moveX == -1 )
+								xTranslate = 0;
+							else
+								xTranslate = 1;
+							moveX = 1;
 							console.log("pressed right");
 							break;
 					case 40: 	// arrow down					
-							yTranslate -= 1;
-							break;	
+							if( moveY == 1 )
+								yTranslate = 0;
+							else
+								yTranslate = -1;
+							moveY = -1;
+							console.log("pressed down");
+							break;
 					case 49: 	// 1
 							// changing rotation while rotation in other direction is in progress 
 							// does rotate tetromino back to original angle
-							rotateCCW = true;
-							if( rotateCW )
-							{
-								rotateCW = false;
+							if( rotate == -1 )
 								theta = 0;
-							}
-							theta = Math.PI/2;
+							else
+								theta = Math.PI/2;
+							rotate = 1;
+							console.log("pressed 1");
 							break;
 					case 51:	// 3
 							// changing rotation while rotation in other direction is in progress 
 							// does rotate tetromino back to original angle
-							rotateCW = true;
-							if( !rotateCCW )
-							{
-								rotateCCW = false;
+							if( rotate == 1 )
 								theta = 0;
-							}
-							theta = -Math.PI/2;
+							else
+								theta = -Math.PI/2;
+							rotate = -1;
+							console.log("pressed 3");
 							break;
 					case 13:	// enter
 							addTetromino();
@@ -243,27 +256,10 @@ function setScalar(sliderValue)
 }
 
 function addTetromino()
-{
-	// a new tetromino is added. however only the newest tetromino is active (can be moved)
-	// calculate a final modelViewMatrix for the old tetromino so that it stays in its state and we save calculations
-	///TODO if scale, translate and rotate only always express change in it (see idea in render), this part is unnecessar 
-/*	if( tetrominoHolder.length != 0 )
-	{
-		modelViewMatrix = mat4.create();	
-		mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(scalar,scalar*aspectRatio,1));
-		mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate,yTranslate,0));
-		mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
-		
-		tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix = modelViewMatrix;
-	}
-*/	
-	
+{	
 	// spawn at random position
 	var modelViewMatrix = [];
-	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(scalar,scalar*aspectRatio,1));
-//	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate,yTranslate,0));
-//	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
-	
+	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(scalar,scalar*aspectRatio,1));	
 	var xrand = Math.floor(Math.random()/scalar);
 	var yrand = Math.floor(Math.random()/scalar*aspectRatio);
 	
@@ -299,7 +295,7 @@ function addTetromino()
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].color), gl.STATIC_DRAW );
 }
 
-function rotateCounterClockwise()
+/*function rotateCounterClockwise()
 {
 	deltaTheta += 0.1;
 	var tempMV = [];
@@ -342,6 +338,97 @@ function rotateClockwise()
 		theta = 0;
 		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix));
 	}
+}
+*/
+
+function move()
+{
+	// three possible movements: rotate, move along x axis and/or move along y axis
+	// this should provide us with a modelViewMatrix we can use
+//	console.log("i am in move");
+	switch( rotate )
+	{
+		case -1 :	deltaTheta -= delta();		/// TODO framerateindependent
+					if( deltaTheta <= theta )
+					{
+						deltaTheta = theta;
+						rotate = 0;
+					}
+//					console.log("i am in rotate -");
+//					console.log("deltaTheta = " + deltaTheta );
+					break;
+		case 1 	: 	deltaTheta += delta();		 /// TODO framerateindependent
+					if( deltaTheta >= theta )
+					{
+						deltaTheta = theta;
+						rotate = 0;
+					}
+//					console.log("i am in rotate +");
+					break;
+	}
+	switch( moveX )
+	{
+		case -1	:	deltaXTranslate -= delta();	/// TODO framerateindependent
+					if( deltaXTranslate <= xTranslate )
+					{
+						deltaXTranslate = xTranslate;
+						moveX = 0;
+					}
+					break;
+		case 1 :	deltaXTranslate += delta();	/// TODO framerateindependent
+					if( deltaXTranslate >= xTranslate )
+					{
+						deltaXTranslate = xTranslate;
+						moveX = 0;
+					}
+					break;
+	}
+	
+	switch( moveY )
+	{
+		case -1	:	deltaYTranslate -= delta();	/// TODO framerateindependent
+					if( deltaYTranslate <= yTranslate )
+					{
+						deltaYTranslate = yTranslate;
+						moveY = 0;
+					}
+					break;
+		case 1 :	deltaYTranslate += delta();	/// TODO framerateindependent
+					if( deltaYTranslate >= yTranslate )
+					{
+						deltaYTranslate = yTranslate;
+						moveY = 0;
+					}
+					break;
+	}
+	
+	var tempModelViewMatrix = mat4.clone(tetrominoHolder[tetrominoHolder.length - 1].modelViewMatrix);
+	
+//	var tempModelViewMatrix = tetrominoHolder[tetrominoHolder.length - 1].modelViewMatrix;
+	mat4.translate(tempModelViewMatrix, tempModelViewMatrix, vec3.fromValues(deltaXTranslate,deltaYTranslate,0));
+	mat4.rotateZ(tempModelViewMatrix, tempModelViewMatrix, deltaTheta);
+	
+	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tempModelViewMatrix));
+	
+	// if the movement has ended copy the the calculated tempModelViewMatrix into the tetrominoHolder
+	if( !(rotate || moveX || moveY) )
+	{
+//		console.log("i am in move end");
+		tetrominoHolder[tetrominoHolder.length - 1].modelViewMatrix = tempModelViewMatrix;
+		deltaTheta = 0;
+		deltaXTranslate = 0;
+		deltaYTranslate = 0;
+	}
+		
+//	modelViewMatrix = mat4.create();	
+//	mat4.scale(modelViewMatrix, mat4.create(), vec3.fromValues(scalar,scalar*aspectRatio,1));
+//	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate,yTranslate,0));
+//	mat4.rotateZ(modelViewMatrix, modelViewMatrix, theta);
+}
+
+function delta()
+{
+	return 0.05;
 }
 
 
