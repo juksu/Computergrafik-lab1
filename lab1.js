@@ -15,9 +15,9 @@ var moveRight = false;
 var moveUp = false;
 var moveDown = false;	
 
-var timeStart = 0;
-var timeStopp = 0.17;
-var transitionTime = 500;
+var timeStart;
+var timeStopp;
+var transitionTime = 500;	// the time a transition (movement or rotation) should occupy (in ms)
 
 var scalar = 2/10;		// initial value, scalar is changed with size of playing field
 var theta = 0;			// rotation
@@ -49,7 +49,7 @@ function tetromino( vertices, modelViewMatrix )
 		
 	for (var i=0; i < vertices.length/DIMENSIONS; i++)
 		col = col.concat( [col1, col2, col3, 1.0 ] );
-    
+
     this.color = col;
 }
 
@@ -104,9 +104,6 @@ function webGLstart()
 function render()
 {
 	gl.clear( gl.COLOR_BUFFER_BIT );
-//    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-
-//	timeStart = Date.now();
 
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{		
@@ -206,6 +203,12 @@ function controls()
 
 function setScalar(sliderValue)
 {
+
+
+	/*
+	 * This part would rescale all tetrominos in the playfield. However it does not scale the distance between the tetrominos so overlapping could occur
+	 * Therefore this was dismissed
+	 * 
 	// reset the scale applied to modelviewMatrix
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{
@@ -216,8 +219,6 @@ function setScalar(sliderValue)
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
-	/// TODO: instead of reseting the playfield scale all elements
-
 	// apply the new scale
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{
@@ -225,11 +226,12 @@ function setScalar(sliderValue)
 	}
 	
 	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
+	 */
 
-//	tetrominoHolder = [];
-//	vertexBufferHolder = [];
-
-//	addTetromino();
+	// clear playfield and add a new tetromino
+	tetrominoHolder = [];
+	vertexBufferHolder = [];
+	addTetromino();
 }
 
 function addTetromino()
@@ -238,13 +240,13 @@ function addTetromino()
 	if( tetrominoHolder.length > 0 )
 		tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix = mat4.clone(modelViewMatrix);
 	
-	// spawn at random position
 	rotateCounterClockWise = rotateClockWise = false;
 	moveLeft = 	moveRight = false;
 	moveUp = moveDown = false;
-	
+
 	mat4.identity(modelViewMatrix);
 	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
+	// spawn at random position
 	xTranslate = Math.floor(Math.random()/scalar) - 1;
 	yTranslate = Math.floor(Math.random()/scalar*aspectRatio) - 1;
 	

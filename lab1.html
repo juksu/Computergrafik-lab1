@@ -4,6 +4,8 @@
 	<head>
 		<title>lab1</title>
 		
+		<link rel="stylesheet" type="text/css" href="lab1.css" />
+		
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 		
 		<script src="lab1.js"></script>
@@ -45,16 +47,34 @@
 
 
 	<body onload="webGLstart();" keydown="handleKeys();">
-		<canvas id="glCanvas" width="400" height="400">
-			Your browser doesn't appear to support the HTML5
-		</canvas>
-	
-	<p>
-		Width of playing field (in Blocks):
-		<span id="scalarSliderValue">10</span>  <br/>
-		Changing this value will reset the playing field.
-		<input id="scalarSlide" type="range" min="4" max="40" step="2" value="10" onchange="setScalar(this.value)"/>		
-	</p>
-	
+		<div id="main">
+			<canvas id="glCanvas" width="400" height="600">
+				Your browser doesn't appear to support the HTML5
+			</canvas>
+			
+			<p>
+				<div class="title">Size:</div>
+				Width of playing field (in Blocks):	<span id="scalarSliderValue">10</span> 
+				<input id="scalarSlide" type="range" min="4" max="40" step="2" value="10" onchange="setScalar(this.value)"/> </br>
+				(Changing this value will reset the playing field)
+			</p>
+			<p>
+				<div class="title">Controls:</div>
+				<ul>
+					<li>"->" or "r": move the object drawn one unit to the right </li>
+					<li>"<-" or "l": move the object drawn one unit to the left </li>
+					<li>"/\" or "u": move the object drawn one unit up </li>
+					<li>"\/" or "d": move the object drawn one unit down </li>
+					<li>"1": rotate the object drawn 90 degrees counterclockwise </li>
+					<li>"3": rotate the object drawn 90 degrees clockwise </li>
+					<li>"enter": spawn a new tetromino </li>
+							
+				</ul>
+			</p>
+			<p>
+				<a href=readme.txt class="title">Readme</a>	
+			</p>
+			
+		</div>
 	</body>
 </html>
