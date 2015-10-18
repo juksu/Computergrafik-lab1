@@ -86,10 +86,6 @@ function spawnLBlock()
 	return vertices;
 }
 
-///TODO gespiegeltes L und z fehlen noch!
-/// TODO rework tetrominos so that center is always at the corner of a block
-
-
 function spawnRandom()
 {
 	var random = Math.floor(Math.random() * 5);

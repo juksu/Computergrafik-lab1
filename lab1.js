@@ -286,12 +286,12 @@ function addTetromino()
 function move()
 {
 	// calculate delta value for rotation
-	var rotation = (Math.PI/2) * (timeStopp - timeStart) / transitionTime;		/// TODO huge performance impact?
+	var rotation = (Math.PI/2) * (timeStopp - timeStart) / transitionTime;
 	
 	if( rotateClockWise )
 	{
-		deltaTheta -= rotation;		/// TODO framerateindependent
-		if( deltaTheta <= theta )		/// idea: instead of setting always back to 0
+		deltaTheta -= rotation;
+		if( deltaTheta <= theta )
 		{
 			deltaTheta = theta;
 			rotateClockWise = false;
