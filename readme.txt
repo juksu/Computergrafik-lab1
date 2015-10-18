@@ -1,6 +1,6 @@
 The work submitted was created by Andreas Fuchs
 
-For realizing this work foreign code was used which can be found in the folder "common".
+Foreign code was used to realize this project. The foreign code can be found in the folder "common":
 - gl-matrix.js from http://glmatrix.net 
 	-> to perform matix calculations.
 - webgl-utils.js from https://github.com/KhronosGroup/WebGL/blob/master/sdk/demos/common/webgl-utils.js 

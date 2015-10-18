@@ -155,7 +155,7 @@ function controls()
 								xTranslate -= 1;
 							moveLeft = true;
 							moveRight = false;
-							console.log("pressed left");
+							// console.log("pressed left");
 							break;							
 					case 85:	// u
 					case 38:	// arrow up
@@ -163,7 +163,7 @@ function controls()
 								yTranslate += 1;
 							moveUp = true;
 							moveDown = false;
-							console.log("pressed up");
+							// console.log("pressed up");
 							break;
 					case 82:	// r
 					case 39:	// arrow right
@@ -171,7 +171,7 @@ function controls()
 								xTranslate += 1;
 							moveRight = true;
 							moveLeft = false;
-							console.log("pressed right");
+							// console.log("pressed right");
 							break;
 					case 68:	// d
 					case 40: 	// arrow down					
@@ -179,21 +179,21 @@ function controls()
 								yTranslate -= 1;
 							moveDown = true;
 							moveUp = false;
-							console.log("pressed down");
+							// console.log("pressed down");
 							break;
 					case 49: 	// 1
 							if( !rotateCounterClockWise )
 								theta += Math.PI/2;
 							rotateCounterClockWise = true;
 							rotateClockWise = false;
-							console.log("pressed 1");
+							// console.log("pressed 1");
 							break;
 					case 51:	// 3
 							if( !rotateClockWise )
 								theta -= Math.PI/2;
 							rotateClockWise = true;
 							rotateCounterClockWise = false;
-							console.log("pressed 3");
+							// console.log("pressed 3");
 							break;
 					case 13:	// enter
 							addTetromino();
