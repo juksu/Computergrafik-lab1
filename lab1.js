@@ -154,40 +154,46 @@ function controls()
 				{
 					case 76:	// l
 					case 37:	// arrow left
-							xTranslate -= 1;
+							if( !moveLeft )
+								xTranslate -= 1;
 							moveLeft = true;
 							moveRight = false;
 							console.log("pressed left");
 							break;							
 					case 85:	// u
 					case 38:	// arrow up
-							yTranslate += 1;
+							if( !moveUp )
+								yTranslate += 1;
 							moveUp = true;
 							moveDown = false;
 							console.log("pressed up");
 							break;
 					case 82:	// r
 					case 39:	// arrow right
-							xTranslate += 1;
+							if( !moveRight )
+								xTranslate += 1;
 							moveRight = true;
 							moveLeft = false;
 							console.log("pressed right");
 							break;
-					case 68:
+					case 68:	// d
 					case 40: 	// arrow down					
-							yTranslate -= 1;
+							if( !moveDown )
+								yTranslate -= 1;
 							moveDown = true;
 							moveUp = false;
 							console.log("pressed down");
 							break;
 					case 49: 	// 1
-							theta += Math.PI/2;
+							if( !rotateCounterClockWise )
+								theta += Math.PI/2;
 							rotateCounterClockWise = true;
 							rotateClockWise = false;
 							console.log("pressed 1");
 							break;
 					case 51:	// 3
-							theta -= Math.PI/2;
+							if( !rotateClockWise )
+								theta -= Math.PI/2;
 							rotateClockWise = true;
 							rotateCounterClockWise = false;
 							console.log("pressed 3");
@@ -200,15 +206,30 @@ function controls()
 
 function setScalar(sliderValue)
 {
+	// reset the scale applied to modelviewMatrix
+	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
+	{
+		mat4.scale(tetrominoHolder[i].modelViewMatrix, tetrominoHolder[i].modelViewMatrix, vec3.fromValues(1/scalar,1/(scalar*aspectRatio),1));	
+	}
+	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(1/scalar,1/(scalar*aspectRatio),1));	
+	
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
 	/// TODO: instead of reseting the playfield scale all elements
 
-	tetrominoHolder = [];
-	vertexBufferHolder = [];
+	// apply the new scale
+	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
+	{
+		mat4.scale(tetrominoHolder[i].modelViewMatrix, tetrominoHolder[i].modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
+	}
+	
+	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
 
-	addTetromino();
+//	tetrominoHolder = [];
+//	vertexBufferHolder = [];
+
+//	addTetromino();
 }
 
 function addTetromino()
@@ -243,6 +264,7 @@ function addTetromino()
 	
 	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0));
 	
+	// get new tetromino and push it into tetrominoHolder
 	tetrominoHolder.push(new tetromino(spawnRandom(), modelViewMatrix));
 		
 	/**
@@ -268,7 +290,7 @@ function move()
 		if( deltaTheta <= theta )		/// idea: instead of setting always back to 0
 		{
 			deltaTheta = theta;
-			rotateCounterClockWise = false;
+			rotateClockWise = false;
 		}
 	}
 	
@@ -278,7 +300,7 @@ function move()
 		if( deltaTheta >= theta )
 		{
 			deltaTheta = theta;
-			rotateClockWise = false;
+			rotateCounterClockWise = false;
 		}
 	}
 	
