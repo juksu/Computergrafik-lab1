@@ -15,6 +15,10 @@ var moveRight = false;
 var moveUp = false;
 var moveDown = false;	
 
+var timeStart = 0;
+var timeStopp = 0.17;
+var transitionTime = 500;
+
 var scalar = 2/10;		// initial value, scalar is changed with size of playing field
 var theta = 0;			// rotation
 var deltaTheta = 0;
@@ -92,6 +96,7 @@ function webGLstart()
 	modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
 			
 	controls();
+	timeStart = Date.now();
 	
 	render();
 }
@@ -99,7 +104,9 @@ function webGLstart()
 function render()
 {
 	gl.clear( gl.COLOR_BUFFER_BIT );
-//    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );	
+//    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+//	timeStart = Date.now();
 
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{		
@@ -114,9 +121,11 @@ function render()
 		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );
 	}
 
-
+	timeStopp = Date.now();
 	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown )
 		move();
+		
+	timeStart = timeStopp;
 
 	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(modelViewMatrix));
 	
@@ -143,24 +152,28 @@ function controls()
 	document.addEventListener("keydown", function(event) {
 				switch(event.keyCode)
 				{
+					case 76:	// l
 					case 37:	// arrow left
 							xTranslate -= 1;
 							moveLeft = true;
 							moveRight = false;
 							console.log("pressed left");
 							break;							
+					case 85:	// u
 					case 38:	// arrow up
 							yTranslate += 1;
 							moveUp = true;
 							moveDown = false;
 							console.log("pressed up");
 							break;
+					case 82:	// r
 					case 39:	// arrow right
 							xTranslate += 1;
 							moveRight = true;
 							moveLeft = false;
 							console.log("pressed right");
 							break;
+					case 68:
 					case 40: 	// arrow down					
 							yTranslate -= 1;
 							moveDown = true;
@@ -195,7 +208,7 @@ function setScalar(sliderValue)
 	tetrominoHolder = [];
 	vertexBufferHolder = [];
 
-	addTetromino();	
+	addTetromino();
 }
 
 function addTetromino()
@@ -246,13 +259,12 @@ function addTetromino()
 
 function move()
 {
-//	console.log("theta = " + theta);
-//	console.log("xTranslate = " + xTranslate);
-//	console.log("yTranslate = " + yTranslate);
+	// calculate delta value for rotation
+	var rotation = (Math.PI/2) * (timeStopp - timeStart) / transitionTime;		/// TODO huge performance impact?
 	
 	if( rotateClockWise )
 	{
-		deltaTheta -= delta();		/// TODO framerateindependent
+		deltaTheta -= rotation;		/// TODO framerateindependent
 		if( deltaTheta <= theta )		/// idea: instead of setting always back to 0
 		{
 			deltaTheta = theta;
@@ -262,7 +274,7 @@ function move()
 	
 	if( rotateCounterClockWise)
 	{
-		deltaTheta += delta();		 /// TODO framerateindependent
+		deltaTheta += rotation;
 		if( deltaTheta >= theta )
 		{
 			deltaTheta = theta;
@@ -270,18 +282,22 @@ function move()
 		}
 	}
 	
+	// calculate delta value for movement
+	var movement = (timeStopp - timeStart) / transitionTime;
+	
 	if( moveLeft )
 	{
-		deltaXTranslate -= delta();	/// TODO framerateindependent
+		deltaXTranslate -= movement;
 		if( deltaXTranslate <= xTranslate )
 		{
 			deltaXTranslate = xTranslate;
 			moveLeft = false;
 		}
 	}
+	
 	if( moveRight )
 	{
-		deltaXTranslate += delta();	/// TODO framerateindependent
+		deltaXTranslate += movement;
 		if( deltaXTranslate >= xTranslate )
 		{
 			deltaXTranslate = xTranslate;
@@ -291,7 +307,7 @@ function move()
 	
 	if( moveUp )
 	{
-		deltaYTranslate += delta();	/// TODO framerateindependent
+		deltaYTranslate += movement;
 		if( deltaYTranslate >= yTranslate )
 		{
 			deltaYTranslate = yTranslate;
@@ -301,7 +317,7 @@ function move()
 	
 	if( moveDown )
 	{
-		deltaYTranslate -= delta();	/// TODO framerateindependent
+		deltaYTranslate -= movement;
 		if( deltaYTranslate <= yTranslate )
 		{
 			deltaYTranslate = yTranslate;
@@ -321,11 +337,6 @@ function move()
 		deltaXTranslate = xTranslate;
 		deltaYTranslate = yTranslate;
 	}
-}
-
-function delta()
-{
-	return 0.05;
 }
 
 
