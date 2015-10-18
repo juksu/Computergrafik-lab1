@@ -48,7 +48,7 @@
 
 	<body onload="webGLstart();" keydown="handleKeys();">
 		<div id="main">
-			<canvas id="glCanvas" width="400" height="600">
+			<canvas id="glCanvas" width="400" height="400">
 				Your browser doesn't appear to support the HTML5
 			</canvas>
 			
@@ -61,18 +61,21 @@
 			<p>
 				<div class="title">Controls:</div>
 				<ul>
-					<li>"->" or "r": move the object drawn one unit to the right </li>
-					<li>"<-" or "l": move the object drawn one unit to the left </li>
-					<li>"/\" or "u": move the object drawn one unit up </li>
-					<li>"\/" or "d": move the object drawn one unit down </li>
-					<li>"1": rotate the object drawn 90 degrees counterclockwise </li>
-					<li>"3": rotate the object drawn 90 degrees clockwise </li>
+					<li>"->" or "r": move the active tetromino one unit to the right </li>
+					<li>"<-" or "l": move the active tetromino one unit to the left </li>
+					<li>"/\" or "u": move the active tetromino one unit up </li>
+					<li>"\/" or "d": move the active tetromino one unit down </li>
+					<li>"1": rotate the active tetromino 90 degrees counterclockwise </li>
+					<li>"3": rotate the active tetromino 90 degrees clockwise </li>
 					<li>"enter": spawn a new tetromino </li>
-							
 				</ul>
+				The newest tetromino is always the active one.
 			</p>
 			<p>
 				<a href=readme.txt class="title">Readme</a>	
+			</p>
+			<p>
+				<a href=http://kettu.bellatrix.uberspace.de/computergrafik/lab1a/lab1.html class="title">View Online</a>	
 			</p>
 			
 		</div>

@@ -207,18 +207,20 @@ function setScalar(sliderValue)
 
 	/*
 	 * This part would rescale all tetrominos in the playfield. However it does not scale the distance between the tetrominos so overlapping could occur
-	 * Therefore this was dismissed
-	 * 
+	 * Therefore this was dismissed 
 	// reset the scale applied to modelviewMatrix
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{
 		mat4.scale(tetrominoHolder[i].modelViewMatrix, tetrominoHolder[i].modelViewMatrix, vec3.fromValues(1/scalar,1/(scalar*aspectRatio),1));	
 	}
 	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(1/scalar,1/(scalar*aspectRatio),1));	
+	*/
 	
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
+	/*
+	 * 
 	// apply the new scale
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{
