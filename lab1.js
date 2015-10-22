@@ -18,6 +18,8 @@ var moveDown = false;
 var timeStart;
 var timeStopp;
 var transitionTime = 500;	// the time a transition (movement or rotation) should occupy (in ms)
+var gravity = 2000;		// the time after which a tetromino falls one block (in ms)
+var lastFall;
 
 var scalar = 2/10;		// initial value, scalar is changed with size of playing field
 var theta = 0;			// rotation
@@ -97,6 +99,7 @@ function webGLstart()
 			
 	controls();
 	timeStart = Date.now();
+	lastFall = timeStart;
 	
 	render();
 }
@@ -119,6 +122,13 @@ function render()
 	}
 
 	timeStopp = Date.now();
+	if( timeStopp - lastFall > gravity )
+	{
+		moveDown = true;
+		yTranslate -= 1;
+		lastFall = timeStopp;
+	}
+	
 	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown )
 		move();
 		
