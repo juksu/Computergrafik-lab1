@@ -20,11 +20,12 @@
 			attribute vec4 vColor;
 			
 			uniform mat4 modelViewMatrix;
+			uniform mat4 perspectiveMatrix;
 			varying vec4 fColor;
 
 			void main()
 			{
-				gl_Position = modelViewMatrix * vPosition;
+				gl_Position = perspectiveMatrix * modelViewMatrix * vPosition;
 				fColor = vColor;
 			}
 			

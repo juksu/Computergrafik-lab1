@@ -6,7 +6,9 @@ var aspectRatio;		// aspect ratio of canvas
 
 var gl;
 var modelViewMatrixLoc;
+var perspectiveMatrixLoc;
 var modelViewMatrix = [];
+var perspectiveMatrix = [];
 
 var rotateCounterClockWise = false;
 var rotateClockWise = false;
@@ -96,6 +98,12 @@ function webGLstart()
     gl.enableVertexAttribArray( vColor );
 
 	modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
+	perspectiveMatrixLoc = gl.getUniformLocation(program, "perspectiveMatrix");
+	
+	perspectiveMatrix = mat4.create();
+	mat4.scale(perspectiveMatrix, perspectiveMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
+//mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
+	mat4.translate(perspectiveMatrix, perspectiveMatrix, vec3.fromValues(-1/scalar, -1/(scalar*aspectRatio), 0));
 			
 	controls();
 	timeStart = Date.now();
@@ -117,24 +125,26 @@ function render()
 		gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );
 		
 		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[i].modelViewMatrix));
+		gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 		
 		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );
 	}
 
 	timeStopp = Date.now();
-	if( timeStopp - lastFall > gravity )
+/*	if( timeStopp - lastFall > gravity )
 	{
 		moveDown = true;
 		yTranslate -= 1;
 		lastFall = timeStopp;
 	}
-	
+*/	
 	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown )
 		move();
 		
 	timeStart = timeStopp;
 
 	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(modelViewMatrix));
+	gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 	
 	gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[vertexBufferHolder.length-1] );
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
@@ -257,7 +267,7 @@ function addTetromino()
 	moveUp = moveDown = false;
 
 	mat4.identity(modelViewMatrix);
-	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
+///	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
 	// spawn at random position
 	xTranslate = Math.floor(Math.random()/scalar) - 1;
 	yTranslate = Math.floor(Math.random()/scalar*aspectRatio) - 1;
@@ -276,7 +286,10 @@ function addTetromino()
 	deltaYTranslate = yTranslate;
 	deltaTheta = theta = 0;
 	
-	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0));
+	deltaXTranslate = xTranslate = 0;
+	deltaYTranslate = yTranslate = 0;
+	
+//	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0));
 	
 	// get new tetromino and push it into tetrominoHolder
 	tetrominoHolder.push(new tetromino(spawnRandom(), modelViewMatrix));
@@ -363,7 +376,7 @@ function move()
 	
 	// calculate a new modelViewMatrix containing changes
 	mat4.identity(modelViewMatrix);
-	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
+///	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
 	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(deltaXTranslate,deltaYTranslate,0));
 	mat4.rotateZ(modelViewMatrix, modelViewMatrix, deltaTheta);
 	
