@@ -157,7 +157,8 @@ function controls()
 				{
 					case 76:	// l
 					case 37:	// arrow left
-							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate - 1, yTranslate) )
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], 
+									xTranslate - 1, yTranslate) )
 							{
 								if( !moveLeft )
 									xTranslate -= 1;
@@ -168,7 +169,8 @@ function controls()
 							break;							
 					case 85:	// u
 					case 38:	// arrow up
-							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate, yTranslate + 1) )
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1],
+									xTranslate, yTranslate + 1) )
 							{
 								if( !moveUp )
 									yTranslate += 1;
@@ -179,7 +181,8 @@ function controls()
 							break;
 					case 82:	// r
 					case 39:	// arrow right
-							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate + 1, yTranslate) )
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], 
+									xTranslate + 1, yTranslate) )
 							{
 								if( !moveRight )
 									xTranslate += 1;
@@ -190,7 +193,8 @@ function controls()
 							break;
 					case 68:	// d
 					case 40: 	// arrow down
-							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate, yTranslate - 1) )
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], 
+									xTranslate, yTranslate - 1) )
 							{
 								if( !moveDown )
 									yTranslate -= 1;
@@ -202,18 +206,49 @@ function controls()
 					case 49: 	// 1
 							/// TODO: checkCollision as before but this time provide also an rotation Matrix
 							/// If the rotation can be performed the relative coordinates have to be updated to the new rotation
-							if( !rotateCounterClockWise )
-								theta += Math.PI/2;
-							rotateCounterClockWise = true;
-							rotateClockWise = false;
-							// console.log("pressed 1");
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], 
+									xTranslate, yTranslate, -1) )
+							{
+								if( !rotateCounterClockWise )
+								{
+									theta += Math.PI/2;
+									var temp;
+									// if we have a rotation we need to save the new relative coordinates
+									for( var i = 0; i < 4; i++ )
+									{
+										temp = tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][0];
+										tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][0] = 
+												-tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][1];
+										tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][1] = temp;
+									}
+								}
+								rotateCounterClockWise = true;
+								rotateClockWise = false;
+								// console.log("pressed 1");
+							}
 							break;
 					case 51:	// 3
-							if( !rotateClockWise )
-								theta -= Math.PI/2;
-							rotateClockWise = true;
-							rotateCounterClockWise = false;
-							// console.log("pressed 3");
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], 
+									xTranslate, yTranslate, 1) )
+							{
+								if( !rotateClockWise )
+								{
+									theta -= Math.PI/2;
+									var temp;
+									// if we have a rotation we need to save the new relative coordinates
+									for( var i = 0; i < 4; i++ )
+									{
+										temp = tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][0];
+										tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][0] = 
+												tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][1];
+										tetrominoHolder[tetrominoHolder.length - 1].relativeCoordinates[i][1] = -temp;
+									}
+									
+								}
+								rotateClockWise = true;
+								rotateCounterClockWise = false;
+								// console.log("pressed 3");
+							}
 							break;
 					case 13:	// enter
 							addTetromino();
@@ -261,7 +296,6 @@ function addTetromino()
 					Math.floor(xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]),
 					Math.floor(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]),
 					bl );
-			
 		}	
 	}
 	
@@ -401,14 +435,31 @@ function move()
 function checkCollision(tetromino, xTrans, yTrans, rotationMatrix)
 {
 	// if a rotationMatrix is provided perform a rotation on the relativeCoordinates
-	if( rotationMatrix )
+	if( rotationMatrix === -1 )		// -1 for counterclockwise rotation
 	{
-		/// TODO
+		for( var i = 0; i < 4; i++ )
+		{			
+			if( worldMatrix.checkCollision(
+					Math.floor(-tetromino.relativeCoordinates[i][1]) + xTrans, 
+					Math.floor(tetromino.relativeCoordinates[i][0]) + yTrans) )
+				return true;
+		}
+	}
+	else if( rotationMatrix === 1 )		// -1 for counterclockwise rotation
+	{
+		for( var i = 0; i < 4; i++ )
+		{			
+			if( worldMatrix.checkCollision(
+					Math.floor(tetromino.relativeCoordinates[i][1]) + xTrans, 
+					Math.floor(-tetromino.relativeCoordinates[i][0]) + yTrans) )
+				return true;
+		}
 	}	
 	else
 	{
 		for( var i = 0; i < 4; i++ )
 		{
+			console.log(tetromino.relativeCoordinates[i]);
 			if( worldMatrix.checkCollision(
 					Math.floor(tetromino.relativeCoordinates[i][0]) + xTrans, 
 					Math.floor(tetromino.relativeCoordinates[i][1]) + yTrans ) )

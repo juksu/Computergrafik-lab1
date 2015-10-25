@@ -26,7 +26,7 @@ WorldMatrix.prototype.checkCollision = function(x, y)
 	if( y < 0 || y >= this.yDim )
 		return true;
 	
-	if( this.matrix[x][y] !== false )		/// TODO: error?
+	if( this.matrix[x][y] !== false )
 		return true;
 	
 	return false;
