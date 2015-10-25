@@ -23,7 +23,7 @@ var transitionTime = 500;	// the time a transition (movement or rotation) should
 var gravity = 2000;		// the time after which a tetromino falls one block (in ms)
 var lastFall;
 
-var scalar = 2/10;		// initial value, scalar is changed with size of playing field
+var scalar;		// initial value, scalar is changed with size of playing field
 var theta = 0;			// rotation
 var deltaTheta = 0;
 var xTranslate = 0;		// move along x-axis
@@ -36,8 +36,10 @@ var vertexBufferHolder = [];
 var vColor;
 var colorBufferHolder = [];
 
+var collisionMatrix;
+
 var tetrominoHolder = [];
-function tetromino( vertices, modelViewMatrix )
+function tetromino( vertices, modelViewMatrix )	///TODO local collision coordinates
 {
 	this.vertices = vertices;
 	this.modelViewMatrix = modelViewMatrix;
@@ -81,10 +83,7 @@ function webGLstart()
 	var program = initShaders( gl, "vertex-shader", "fragment-shader" );
 	gl.useProgram( program );	
 
-	/**
-	 * add first object
-	 */
-	addTetromino();
+	setScalar(10);	// 10 is the standard size
 
 	/**
 	 * Associate out shader variables with our data buffer
@@ -222,35 +221,15 @@ function controls()
 }
 
 function setScalar(sliderValue)
-{
-
-
-	/*
-	 * This part would rescale all tetrominos in the playfield. However it does not scale the distance between the tetrominos so overlapping could occur
-	 * Therefore this was dismissed 
-	// reset the scale applied to modelviewMatrix
-	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
-	{
-		mat4.scale(tetrominoHolder[i].modelViewMatrix, tetrominoHolder[i].modelViewMatrix, vec3.fromValues(1/scalar,1/(scalar*aspectRatio),1));	
-	}
-	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(1/scalar,1/(scalar*aspectRatio),1));	
-	*/
-	
+{	
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
-	/*
-	 * 
-	// apply the new scale
-	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
-	{
-		mat4.scale(tetrominoHolder[i].modelViewMatrix, tetrominoHolder[i].modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
-	}
-	
-	mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));	
-	 */
+	// clear playfield and collisionMatrix and add a new tetromino
+	collisionMatrix = new CollisionMatrix(sliderValue, sliderValue*aspectRatio);
+	console.log("xDim " + collisionMatrix.xDim + ", yDim " + collisionMatrix.yDim );
+	console.log(collisionMatrix.isOccupied(1,1));
 
-	// clear playfield and add a new tetromino
 	tetrominoHolder = [];
 	vertexBufferHolder = [];
 	addTetromino();
