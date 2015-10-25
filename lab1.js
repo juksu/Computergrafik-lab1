@@ -36,28 +36,9 @@ var vertexBufferHolder = [];
 var vColor;
 var colorBufferHolder = [];
 
-var collisionMatrix;
+var worldMatrix;
 
 var tetrominoHolder = [];
-function tetromino( vertices, modelViewMatrix )	///TODO local collision coordinates
-{
-	this.vertices = vertices;
-	this.modelViewMatrix = modelViewMatrix;
-	var col = [];
-	
-	// i simply want to have onecolored tetrominos
-	// -> assign each vertex the same color value
-	// for some fancy rainbowcolor effects assign different colors to the vertices but I was told rainbowcolor is bad ;)
-	// should not be to bright or dark -> use only random values between 50 and 200
-	var col1 = (Math.floor(Math.random()*150)+50)/256;
-	var col2 = (Math.floor(Math.random()*150)+50)/256;
-	var col3 = (Math.floor(Math.random()*150)+50)/256;
-		
-	for (var i=0; i < vertices.length/DIMENSIONS; i++)
-		col = col.concat( [col1, col2, col3, 1.0 ] );
-
-    this.color = col;
-}
 
 function webGLstart()
 {
@@ -115,6 +96,8 @@ function render()
 {
 	gl.clear( gl.COLOR_BUFFER_BIT );
 
+	// instead of tetrominoHolder draw WorldMatrix
+
 	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{		
 		gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[i] );
@@ -137,6 +120,10 @@ function render()
 		lastFall = timeStopp;
 	}
 */	
+	
+	/// TODO if moveWorld moveWorld(), else if( rotate...) moveActive()
+	/// mutually exclusive
+	//
 	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown )
 		move();
 		
@@ -225,10 +212,10 @@ function setScalar(sliderValue)
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
-	// clear playfield and collisionMatrix and add a new tetromino
-	collisionMatrix = new CollisionMatrix(sliderValue, sliderValue*aspectRatio);
-	console.log("xDim " + collisionMatrix.xDim + ", yDim " + collisionMatrix.yDim );
-	console.log(collisionMatrix.isOccupied(1,1));
+	// clear playfield and worldMatrix and add a new tetromino
+	// because of weird aspect ratio the yDim can be a float -> Solution: ceil
+	worldMatrix = new WorldMatrix(sliderValue, Math.ceil(sliderValue/aspectRatio));		
+	console.log("xDim " + worldMatrix.xDim + ", yDim " + worldMatrix.yDim );		///TODO remove
 
 	tetrominoHolder = [];
 	vertexBufferHolder = [];
@@ -240,6 +227,32 @@ function addTetromino()
 	// copy the modelViewMatrix into the tetrominoholder
 	if( tetrominoHolder.length > 0 )
 		tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix = mat4.clone(modelViewMatrix);
+		
+	/// TODO: copy the Blocks of the old Tetromino into the worldMatrix
+	/// xTranslate and yTranslate hold the position from which the relative position is calculated
+	if( tetrominoHolder.length > 0 )	/// TODO: change if tetrominoHolder is removed
+	{
+		for( var i = 0; i < 4; i++ )		// 4 = numOfBlocks = always 4
+		{
+			var bl = new Block( mat4.create(), tetrominoHolder[tetrominoHolder.length-1].color );
+			mat4.translate(bl.modelViewMatrix, bl.modelViewMatrix, 
+					vec3.fromValues(
+							Math.floor(xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]),	//x
+							Math.floor(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]),	//y
+							0));
+			
+			console.log(		xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]);
+			console.log(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]);
+			worldMatrix.addBlock( 
+					Math.floor(xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]),
+					Math.floor(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]),
+					bl );
+			
+		}	
+	}
+	
+	worldMatrix.printWorldMatrix();
+		
 	
 	rotateCounterClockWise = rotateClockWise = false;
 	moveLeft = 	moveRight = false;
@@ -271,7 +284,10 @@ function addTetromino()
 //	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0));
 	
 	// get new tetromino and push it into tetrominoHolder
-	tetrominoHolder.push(new tetromino(spawnRandom(), modelViewMatrix));
+//	tetrominoHolder.push(new Tetromino(spawnRandom(), modelViewMatrix));
+	tetrominoHolder.push(new Tetromino());
+	console.log(tetrominoHolder[tetrominoHolder.length-1].vertices.toString());
+//	.Tetromino.vertices.toString());
 		
 	/**
 	 * Load the data into the GPU
@@ -288,6 +304,7 @@ function addTetromino()
 function move()
 {
 	// calculate delta value for rotation
+	/// TODO: i have to remember the rotation of the tetromino OR change the relativeCollisionCoordinates
 	var rotation = (Math.PI/2) * (timeStopp - timeStart) / transitionTime;
 	
 	if( rotateClockWise )
