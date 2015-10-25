@@ -153,6 +153,8 @@ function controls()
 	 * event listener in case of button press
 	 */
 	document.addEventListener("keydown", function(event) {
+				
+				/// TODO: check in all events if collision is happening
 				switch(event.keyCode)
 				{
 					case 76:	// l
