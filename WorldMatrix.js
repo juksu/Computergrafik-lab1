@@ -17,15 +17,19 @@ var WorldMatrix = function(xDim, yDim)
 			this.matrix[i][j] = false;
 }
 
-/**
- * ask if place in matrix is occupied
- */
-WorldMatrix.prototype.isOccupied = function(x, y)
+WorldMatrix.prototype.checkCollision = function(x, y)
 {
-	if( this.matrix[x][y] !== false )
+	console.log("check for x = " + x + ", y = " + y );
+	if( x < 0 || x >= this.xDim )
 		return true;
-	else
-		return false;
+	
+	if( y < 0 || y >= this.yDim )
+		return true;
+	
+	if( this.matrix[x][y] !== false )		/// TODO: error?
+		return true;
+	
+	return false;
 }
 
 WorldMatrix.prototype.addBlock = function(x, y, block)
@@ -41,7 +45,7 @@ WorldMatrix.prototype.removeBlock = function(x, y )
 WorldMatrix.prototype.isRowFull = function( y )
 {
 	for( var i = 0; i < this.matrix.length; i++ )
-		if( !(this.isOccupied(i, y)) )
+		if( !(this.checkCollision(i, y)) )
 			return true;
 	
 	return false;
@@ -67,14 +71,12 @@ WorldMatrix.prototype.moveDownAbove = function( y )
 
 WorldMatrix.prototype.printWorldMatrix = function()
 {
-
-	
 	for( var j = this.yDim - 1; j >= 0; j-- )
 	{
 		var str = "";
 		for( var i = 0; i < this.xDim; i++ )
 		{
-			if( this.isOccupied( i, j ) )
+			if( this.checkCollision( i, j ) )
 				str = str + "x";
 			else
 				str = str + ".";

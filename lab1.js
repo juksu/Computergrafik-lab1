@@ -19,7 +19,7 @@ var moveDown = false;
 
 var timeStart;
 var timeStopp;
-var transitionTime = 500;	// the time a transition (movement or rotation) should occupy (in ms)
+var transitionTime = 250;	// the time a transition (movement or rotation) should occupy (in ms)
 var gravity = 2000;		// the time after which a tetromino falls one block (in ms)
 var lastFall;
 
@@ -149,9 +149,7 @@ function render()
 
 function controls()
 {
-	/**
-	 * event listener in case of button press
-	 */
+	//event listener in case of button press
 	document.addEventListener("keydown", function(event) {
 				
 				/// TODO: check in all events if collision is happening
@@ -159,37 +157,51 @@ function controls()
 				{
 					case 76:	// l
 					case 37:	// arrow left
-							if( !moveLeft )
-								xTranslate -= 1;
-							moveLeft = true;
-							moveRight = false;
-							// console.log("pressed left");
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate - 1, yTranslate) )
+							{
+								if( !moveLeft )
+									xTranslate -= 1;
+								moveLeft = true;
+								moveRight = false;
+								// console.log("pressed left");
+							}
 							break;							
 					case 85:	// u
 					case 38:	// arrow up
-							if( !moveUp )
-								yTranslate += 1;
-							moveUp = true;
-							moveDown = false;
-							// console.log("pressed up");
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate, yTranslate + 1) )
+							{
+								if( !moveUp )
+									yTranslate += 1;
+								moveUp = true;
+								moveDown = false;
+								// console.log("pressed up");
+							}
 							break;
 					case 82:	// r
 					case 39:	// arrow right
-							if( !moveRight )
-								xTranslate += 1;
-							moveRight = true;
-							moveLeft = false;
-							// console.log("pressed right");
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate + 1, yTranslate) )
+							{
+								if( !moveRight )
+									xTranslate += 1;
+								moveRight = true;
+								moveLeft = false;
+								// console.log("pressed right");
+							}
 							break;
 					case 68:	// d
-					case 40: 	// arrow down					
-							if( !moveDown )
-								yTranslate -= 1;
-							moveDown = true;
-							moveUp = false;
-							// console.log("pressed down");
+					case 40: 	// arrow down
+							if( !checkCollision(tetrominoHolder[tetrominoHolder.length - 1], xTranslate, yTranslate - 1) )
+							{
+								if( !moveDown )
+									yTranslate -= 1;
+								moveDown = true;
+								moveUp = false;
+								// console.log("pressed down");
+							}
 							break;
 					case 49: 	// 1
+							/// TODO: checkCollision as before but this time provide also an rotation Matrix
+							/// If the rotation can be performed the relative coordinates have to be updated to the new rotation
 							if( !rotateCounterClockWise )
 								theta += Math.PI/2;
 							rotateCounterClockWise = true;
@@ -280,10 +292,10 @@ function addTetromino()
 	deltaYTranslate = yTranslate;
 	deltaTheta = theta = 0;
 	
-	deltaXTranslate = xTranslate = 0;
-	deltaYTranslate = yTranslate = 0;
+	deltaXTranslate = xTranslate = 5;
+	deltaYTranslate = yTranslate = 3;
 	
-//	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0));
+	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0));
 	
 	// get new tetromino and push it into tetrominoHolder
 //	tetrominoHolder.push(new Tetromino(spawnRandom(), modelViewMatrix));
@@ -384,6 +396,26 @@ function move()
 		deltaXTranslate = xTranslate;
 		deltaYTranslate = yTranslate;
 	}
+}
+
+function checkCollision(tetromino, xTrans, yTrans, rotationMatrix)
+{
+	// if a rotationMatrix is provided perform a rotation on the relativeCoordinates
+	if( rotationMatrix )
+	{
+		/// TODO
+	}	
+	else
+	{
+		for( var i = 0; i < 4; i++ )
+		{
+			if( worldMatrix.checkCollision(
+					Math.floor(tetromino.relativeCoordinates[i][0]) + xTrans, 
+					Math.floor(tetromino.relativeCoordinates[i][1]) + yTrans ) )
+				return true;
+		}
+	}
+	return false;	
 }
 
 
