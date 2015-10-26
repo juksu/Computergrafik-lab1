@@ -13,14 +13,18 @@ var rotateCounterClockWise = false;
 var rotateClockWise = false;
 var moveLeft = false;
 var moveRight = false;
-var moveUp = false;
-var moveDown = false;	
+var moveDown = false;
+var moveDownFast = false;
 
 var timeStart;
 var timeStopp;
-var transitionTime = 250;	// the time a transition (movement or rotation) should occupy (in ms)
+var transitionTime = 125;	// the time a transition (movement or rotation) should occupy (in ms)
+var transitionTimeFast = 75; 	// the time a fast transition (moving a tetromino down) should occupy per block (in ms)
+
+var isGravity = true;
 var gravity = 2000;		// the time after which a tetromino falls one block (in ms)
 var lastFall;
+
 
 var scalar;		// scalar is changed with size of playing field
 var theta = 0;			// rotation
@@ -93,34 +97,28 @@ function render()
 	worldCoordinates.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc );
 	
 	timeStopp = Date.now();
-	if( timeStopp - lastFall > gravity )
+	if( isGravity && !moveDownFast )
 	{
-		/// TODO: check for collision
-		/// if collision than spawn a new tetromino
-		//~ moveDown = true;
-		//~ yTranslate -= 1;
-		//~ lastFall = timeStopp;
-
-		if( !checkCollision(tetromino, xTranslate, yTranslate - 1) )
+		if( timeStopp - lastFall > gravity )
 		{
-			if( !moveDown )
-				yTranslate -= 1;
-			moveDown = true;
-			moveUp = false;
-			lastFall = timeStopp;
-			// console.log("pressed down");
-		}
-		else
-		{
-			// render tetromino to avoid graphical glitch where the tetromino would dissappear for a frame
-			tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
-			addTetromino();
-		}
-	}	
-	
+			if( !checkCollision(tetromino, xTranslate, yTranslate - 1) )
+			{
+				if( !moveDown )
+					yTranslate -= 1;
+				moveDown = true;
+				lastFall = timeStopp;
+			}
+			else
+			{
+				// render tetromino to avoid graphical glitch where the tetromino would dissappear for a frame
+				tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
+				addTetromino();
+			}
+		}	
+	}
 	/// TODO if moveWorld moveWorld(), else if( rotate...) moveActive()
 	/// mutually exclusive
-	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown )
+	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveDown || moveDownFast )
 		move();
 		
 	timeStart = timeStopp;
@@ -131,12 +129,17 @@ function render()
 	// and then call the render function recorsively
 	if( !gameOver )
 		requestAnimFrame(render);
+	else
+		cancelAnimFrame(render);
 }
 
 function renderGameOver()
 {
-	gl.clear( gl.COLOR_BUFFER_BIT );
 	gl.clearColor( 1.0, 0.0, 0.0, 0.9 );
+	gl.clear( gl.COLOR_BUFFER_BIT );
+	
+	worldCoordinates.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc );
+	tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
 }
 
 function controls()
@@ -160,14 +163,7 @@ function controls()
 						break;							
 					case 85:	// u
 					case 38:	// arrow up
-						if( !checkCollision(tetromino,	xTranslate, yTranslate + 1 ) )
-						{
-							if( !moveUp )
-								yTranslate += 1;
-							moveUp = true;
-							moveDown = false;
-							// console.log("pressed up");
-						}
+						isGravity = false;
 						break;
 					case 82:	// r
 					case 39:	// arrow right
@@ -181,15 +177,24 @@ function controls()
 						}
 						break;
 					case 68:	// d
-					case 40: 	// arrow down
-						if( !checkCollision(tetromino, xTranslate, yTranslate - 1) )
+					case 40: 	// arrow down					
+						if( isGravity )		// gravity is in place.
 						{
-							if( !moveDown )
-								yTranslate -= 1;
-							moveDown = true;
-							moveUp = false;
-							// console.log("pressed down");
+							moveDownFast = true;
+							moveDown = false;
+							/// TODO: check how many units can be moved down to the first collision
+							for( var i = 0; i < worldCoordinates.yDim; i++ )
+							{
+								if( checkCollision(tetromino, xTranslate, yTranslate - i ) )
+								{
+									yTranslate -= (i-1);
+									break;
+								}
+							}
 						}
+						else
+							isGravity = true;	// reinstate gravity
+						// console.log("pressed down");
 						break;
 					case 49: 	// 1
 						if( !checkCollision(tetromino, xTranslate, yTranslate, -1) )
@@ -226,9 +231,9 @@ function controls()
 									temp = tetromino.relativeCoordinates[i][0];
 									tetromino.relativeCoordinates[i][0] = tetromino.relativeCoordinates[i][1];
 									tetromino.relativeCoordinates[i][1] = -temp;
-								}
-								
-							} rotateClockWise = true;
+								}			
+							}
+							rotateClockWise = true;
 							rotateCounterClockWise = false;
 							// console.log("pressed 3");
 						}
@@ -252,7 +257,9 @@ function setScalar(sliderValue)
 
 	// clear playfield and worldCoordinates and add a new tetromino
 	// because of weird aspect ratio the yDim can be a float -> Solution: ceil
-	worldCoordinates = new WorldCoordinates(sliderValue, Math.ceil(sliderValue/aspectRatio));		
+	// we want to extend the world a bit beyond drawn field to avoid new tetrominos ploping in
+	// -> add 2 to y-dimension
+	worldCoordinates = new WorldCoordinates(sliderValue, Math.ceil(sliderValue/aspectRatio) + 2);		
 	tetromino = null;
 
 	addTetromino();
@@ -287,7 +294,8 @@ function addTetromino()
 			
 	rotateCounterClockWise = rotateClockWise = false;
 	moveLeft = 	moveRight = false;
-	moveUp = moveDown = false;
+	moveDown = moveDownFast = false;
+	isGravity = true;
 
 	// spawn new tetromino at the top middle
 	deltaXTranslate = xTranslate = worldCoordinates.xDim / 2;
@@ -302,11 +310,13 @@ function addTetromino()
 	tetromino.addVertexBuffer( gl, gl.createBuffer() );
 	tetromino.addColorBuffer( gl, gl.createBuffer() );
 
+	lastFall = timeStopp;
+
 	// if the tetromino has a collision on spawn the game is over
 	if( checkCollision(tetromino, xTranslate, yTranslate) )
 	{
-		renderGameOver();
 		gameOver = true;
+		renderGameOver();
 	}
 }
 
@@ -358,16 +368,6 @@ function move()
 		}
 	}
 	
-	if( moveUp )
-	{
-		deltaYTranslate += movement;
-		if( deltaYTranslate >= yTranslate )
-		{
-			deltaYTranslate = yTranslate;
-			moveUp = false;
-		}
-	}
-	
 	if( moveDown )
 	{
 		deltaYTranslate -= movement;
@@ -378,13 +378,30 @@ function move()
 		}
 	}
 	
+	if( moveDownFast )
+	{
+		console.log("moveDownFast = true");
+		deltaYTranslate -= (timeStopp - timeStart) / transitionTimeFast;
+		console.log("deltaYTranslate " + deltaYTranslate );
+		if( deltaYTranslate <= yTranslate )
+		{
+			deltaYTranslate = yTranslate;
+			moveDownFast = false;
+			
+			// we reached collision, add new tetromnio
+			tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
+			addTetromino();			
+		}
+	}
+	
 	// calculate a new modelViewMatrix containing changes
 	mat4.identity(tetromino.modelViewMatrix);
 	mat4.translate(tetromino.modelViewMatrix, tetromino.modelViewMatrix,
 			vec3.fromValues(deltaXTranslate,deltaYTranslate,0));
 	mat4.rotateZ(tetromino.modelViewMatrix, tetromino.modelViewMatrix, deltaTheta);
 	
-	if( !(rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown) )
+	if( !(rotateCounterClockWise || rotateClockWise || moveLeft 
+			|| moveRight || moveDown || moveDownFast) )
 	{
 		deltaTheta = theta;
 		deltaXTranslate = xTranslate;
