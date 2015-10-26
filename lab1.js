@@ -36,7 +36,7 @@ var vertexBufferHolder = [];
 var vColor;
 var colorBufferHolder = [];
 
-var worldMatrix;
+var worldCoordinates;
 
 var tetrominoHolder = [];
 
@@ -84,6 +84,8 @@ function webGLstart()
 	mat4.scale(perspectiveMatrix, perspectiveMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
 //mat4.scale(modelViewMatrix, modelViewMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
 	mat4.translate(perspectiveMatrix, perspectiveMatrix, vec3.fromValues(-1/scalar, -1/(scalar*aspectRatio), 0));
+	// since the perspective matrix stays the same throughout it only needs to be set once
+	gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 			
 	controls();
 	timeStart = Date.now();
@@ -96,9 +98,11 @@ function render()
 {
 	gl.clear( gl.COLOR_BUFFER_BIT );
 
-	// instead of tetrominoHolder draw WorldMatrix
+	// instead of tetrominoHolder draw worldCoordinates
+	worldCoordinates.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc );
 
-	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
+
+/*	for( var i = 0; i < tetrominoHolder.length - 1; i++ )
 	{		
 		gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[i] );
 		gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
@@ -107,11 +111,11 @@ function render()
 		gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );
 		
 		gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(tetrominoHolder[i].modelViewMatrix));
-		gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
+//		gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 		
 		gl.drawArrays( gl.TRIANGLES, 0, tetrominoHolder[i].vertices.length/DIMENSIONS );
 	}
-
+*/
 	timeStopp = Date.now();
 /*	if( timeStopp - lastFall > gravity )
 	{
@@ -130,7 +134,7 @@ function render()
 	timeStart = timeStopp;
 
 	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(modelViewMatrix));
-	gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
+//	gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 	
 	gl.bindBuffer( gl.ARRAY_BUFFER, vertexBufferHolder[vertexBufferHolder.length-1] );
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );
@@ -261,10 +265,16 @@ function setScalar(sliderValue)
 	scalar = 2/(sliderValue);
 	document.getElementById("scalarSliderValue").innerHTML = sliderValue;
 
-	// clear playfield and worldMatrix and add a new tetromino
+	// clear playfield and worldCoordinates and add a new tetromino
 	// because of weird aspect ratio the yDim can be a float -> Solution: ceil
-	worldMatrix = new WorldMatrix(sliderValue, Math.ceil(sliderValue/aspectRatio));		
-	console.log("xDim " + worldMatrix.xDim + ", yDim " + worldMatrix.yDim );		///TODO remove
+	worldCoordinates = new WorldCoordinates(sliderValue, Math.ceil(sliderValue/aspectRatio));		
+	console.log("xDim " + worldCoordinates.xDim + ", yDim " + worldCoordinates.yDim );		///TODO remove
+
+	// calculate new perspectiveMatrix
+	perspectiveMatrix = mat4.create();
+	mat4.scale(perspectiveMatrix, perspectiveMatrix, vec3.fromValues(scalar,scalar*aspectRatio,1));
+	mat4.translate(perspectiveMatrix, perspectiveMatrix, vec3.fromValues(-1/scalar, -1/(scalar*aspectRatio), 0));
+	gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 
 	tetrominoHolder = [];
 	vertexBufferHolder = [];
@@ -277,7 +287,7 @@ function addTetromino()
 	if( tetrominoHolder.length > 0 )
 		tetrominoHolder[tetrominoHolder.length-1].modelViewMatrix = mat4.clone(modelViewMatrix);
 		
-	/// TODO: copy the Blocks of the old Tetromino into the worldMatrix
+	/// TODO: copy the Blocks of the old Tetromino into the worldCoordinates
 	/// xTranslate and yTranslate hold the position from which the relative position is calculated
 	if( tetrominoHolder.length > 0 )	/// TODO: change if tetrominoHolder is removed
 	{
@@ -289,17 +299,21 @@ function addTetromino()
 							Math.floor(xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]),	//x
 							Math.floor(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]),	//y
 							0));
-			
-			console.log(		xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]);
+			bl.addVertexBuffer( gl, gl.createBuffer() );
+			bl.addColorBuffer( gl, gl.createBuffer() );
+					
+			console.log(xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]);
 			console.log(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]);
-			worldMatrix.addBlock( 
+			worldCoordinates.addBlock( 
 					Math.floor(xTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][0]),
 					Math.floor(yTranslate + tetrominoHolder[tetrominoHolder.length-1].relativeCoordinates[i][1]),
 					bl );
+					
+//			bl.renderBlock( gl, vPosition, vColor, modelViewMatrixLoc );
 		}	
 	}
 	
-	worldMatrix.printWorldMatrix();
+	worldCoordinates.printWorldCoordinates();
 		
 	
 	rotateCounterClockWise = rotateClockWise = false;
@@ -439,7 +453,7 @@ function checkCollision(tetromino, xTrans, yTrans, rotationMatrix)
 	{
 		for( var i = 0; i < 4; i++ )
 		{			
-			if( worldMatrix.checkCollision(
+			if( worldCoordinates.checkCollision(
 					Math.floor(-tetromino.relativeCoordinates[i][1]) + xTrans, 
 					Math.floor(tetromino.relativeCoordinates[i][0]) + yTrans) )
 				return true;
@@ -449,7 +463,7 @@ function checkCollision(tetromino, xTrans, yTrans, rotationMatrix)
 	{
 		for( var i = 0; i < 4; i++ )
 		{			
-			if( worldMatrix.checkCollision(
+			if( worldCoordinates.checkCollision(
 					Math.floor(tetromino.relativeCoordinates[i][1]) + xTrans, 
 					Math.floor(-tetromino.relativeCoordinates[i][0]) + yTrans) )
 				return true;
@@ -459,8 +473,8 @@ function checkCollision(tetromino, xTrans, yTrans, rotationMatrix)
 	{
 		for( var i = 0; i < 4; i++ )
 		{
-			console.log(tetromino.relativeCoordinates[i]);
-			if( worldMatrix.checkCollision(
+//			console.log(tetromino.relativeCoordinates[i]);
+			if( worldCoordinates.checkCollision(
 					Math.floor(tetromino.relativeCoordinates[i][0]) + xTrans, 
 					Math.floor(tetromino.relativeCoordinates[i][1]) + yTrans ) )
 				return true;
