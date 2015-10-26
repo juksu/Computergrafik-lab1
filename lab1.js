@@ -7,7 +7,6 @@ var aspectRatio;		// aspect ratio of canvas
 var gl;
 var modelViewMatrixLoc;
 var perspectiveMatrixLoc;
-var modelViewMatrix = [];
 var perspectiveMatrix = [];
 
 var rotateCounterClockWise = false;
@@ -285,10 +284,11 @@ function addTetromino()
 	deltaXTranslate = xTranslate = 5;
 	deltaYTranslate = yTranslate = 3;
 
-	mat4.identity(modelViewMatrix);		/// TODO
-	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(xTranslate, yTranslate, 0)); /// TODO
-	
-	tetromino = new Tetromino( modelViewMatrix ); /// TODO
+	tetromino = new Tetromino();
+	mat4.identity(tetromino.modelViewMatrix);
+	mat4.translate(tetromino.modelViewMatrix, tetromino.modelViewMatrix,
+			vec3.fromValues(xTranslate, yTranslate, 0));
+
 	tetromino.addVertexBuffer( gl, gl.createBuffer() );
 	tetromino.addColorBuffer( gl, gl.createBuffer() );
 }
@@ -362,9 +362,10 @@ function move()
 	}
 	
 	// calculate a new modelViewMatrix containing changes
-	mat4.identity(modelViewMatrix);		/// TODO
-	mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(deltaXTranslate,deltaYTranslate,0));	/// TODO
-	mat4.rotateZ(modelViewMatrix, modelViewMatrix, deltaTheta);	/// TODO
+	mat4.identity(tetromino.modelViewMatrix);
+	mat4.translate(tetromino.modelViewMatrix, tetromino.modelViewMatrix,
+			vec3.fromValues(deltaXTranslate,deltaYTranslate,0));
+	mat4.rotateZ(tetromino.modelViewMatrix, tetromino.modelViewMatrix, deltaTheta);
 	
 	if( !(rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveUp || moveDown) )
 	{

@@ -1,4 +1,4 @@
-var Tetromino = function( modelViewMatrix )
+var Tetromino = function()
 {	
 	/**
 	 * construct tetris elements with triangles
@@ -175,7 +175,7 @@ var Tetromino = function( modelViewMatrix )
 	spawnRandom(this.vertices, this.relativeCoordinates);
 	this.color = addColor(this.vertices);
 
-	this.modelViewMatrix = modelViewMatrix;
+	this.modelViewMatrix = [];
 }
 
 Tetromino.prototype.addVertexBuffer = function( gl, vertexBuffer )
