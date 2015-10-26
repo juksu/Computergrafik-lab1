@@ -73,18 +73,29 @@ WorldCoordinates.prototype.moveDownAbove = function( y, moveDownBy )
 
 WorldCoordinates.prototype.printWorldCoordinates = function()
 {
+	var string = "";
+	
+	for( var i = 0; i < this.xDim + 2; i++ )
+		string += "-";
+	string += "\n";
+	
 	for( var j = this.yDim - 1; j >= 0; j-- )
 	{
-		var str = "";
+		string += "|";
 		for( var i = 0; i < this.xDim; i++ )
 		{
 			if( this.checkCollision( i, j ) )
-				str = str + "x";
+				string += "x";
 			else
-				str = str + ".";
+				string += ".";
 		}
-		console.log(str);
+		string += "|\n";
 	}
+	
+	for( var i = 0; i < this.xDim + 2; i++ )
+		string += "-";
+
+	return string;
 }
 
 WorldCoordinates.prototype.renderWorld = function( gl, vPosition, vColor, modelViewMatrixLoc )

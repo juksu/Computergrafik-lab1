@@ -36,6 +36,8 @@ var vColor;
 var worldCoordinates;
 var tetromino;
 
+var gameOver = false;
+
 function webGLstart()
 {
 
@@ -91,13 +93,30 @@ function render()
 	worldCoordinates.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc );
 	
 	timeStopp = Date.now();
-/*	if( timeStopp - lastFall > gravity )
+	if( timeStopp - lastFall > gravity )
 	{
-		moveDown = true;
-		yTranslate -= 1;
-		lastFall = timeStopp;
-	}
-*/	
+		/// TODO: check for collision
+		/// if collision than spawn a new tetromino
+		//~ moveDown = true;
+		//~ yTranslate -= 1;
+		//~ lastFall = timeStopp;
+
+		if( !checkCollision(tetromino, xTranslate, yTranslate - 1) )
+		{
+			if( !moveDown )
+				yTranslate -= 1;
+			moveDown = true;
+			moveUp = false;
+			lastFall = timeStopp;
+			// console.log("pressed down");
+		}
+		else
+		{
+			// render tetromino to avoid graphical glitch where the tetromino would dissappear for a frame
+			tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
+			addTetromino();
+		}
+	}	
 	
 	/// TODO if moveWorld moveWorld(), else if( rotate...) moveActive()
 	/// mutually exclusive
@@ -110,7 +129,14 @@ function render()
 		
 	// request browser to display the rendering the next time it wants to refresh the display
 	// and then call the render function recorsively
-	requestAnimFrame(render);
+	if( !gameOver )
+		requestAnimFrame(render);
+}
+
+function renderGameOver()
+{
+	gl.clear( gl.COLOR_BUFFER_BIT );
+	gl.clearColor( 1.0, 0.0, 0.0, 0.9 );
 }
 
 function controls()
@@ -247,8 +273,8 @@ function addTetromino()
 			bl.addVertexBuffer( gl, gl.createBuffer() );
 			bl.addColorBuffer( gl, gl.createBuffer() );
 					
-			console.log(xTranslate + tetromino.relativeCoordinates[i][0]);
-			console.log(yTranslate + tetromino.relativeCoordinates[i][1]);
+			// console.log(xTranslate + tetromino.relativeCoordinates[i][0]);
+			// console.log(yTranslate + tetromino.relativeCoordinates[i][1]);
 
 			worldCoordinates.addBlock( 
 					Math.floor(xTranslate + tetromino.relativeCoordinates[i][0]),
@@ -257,40 +283,31 @@ function addTetromino()
 		}	
 	}
 	
-	worldCoordinates.printWorldCoordinates();
+	console.log(worldCoordinates.printWorldCoordinates());
 			
 	rotateCounterClockWise = rotateClockWise = false;
 	moveLeft = 	moveRight = false;
 	moveUp = moveDown = false;
 
-	// spawn at random position
-/*	xTranslate = Math.floor(Math.random()/scalar) - 1;
-	yTranslate = Math.floor(Math.random()/scalar*aspectRatio) - 1;
-	
-	switch( Math.floor(Math.random()*4) )
-	{
-		case 1:	xTranslate *= -1;
-				break;
-		case 2:	yTranslate *= -1;
-				break;
-		case 3: xTranslate *= -1;
-				yTranslate *= -1;
-	}
-	
-	deltaXTranslate = xTranslate;
-	deltaYTranslate = yTranslate;
-*/
-	deltaTheta = theta = 0;	
-	deltaXTranslate = xTranslate = 5;
-	deltaYTranslate = yTranslate = 3;
+	// spawn new tetromino at the top middle
+	deltaXTranslate = xTranslate = worldCoordinates.xDim / 2;
+	deltaYTranslate = yTranslate = worldCoordinates.yDim - 1;
+	deltaTheta = theta = 0;
 
 	tetromino = new Tetromino();
 	mat4.identity(tetromino.modelViewMatrix);
 	mat4.translate(tetromino.modelViewMatrix, tetromino.modelViewMatrix,
 			vec3.fromValues(xTranslate, yTranslate, 0));
-
+			
 	tetromino.addVertexBuffer( gl, gl.createBuffer() );
 	tetromino.addColorBuffer( gl, gl.createBuffer() );
+
+	// if the tetromino has a collision on spawn the game is over
+	if( checkCollision(tetromino, xTranslate, yTranslate) )
+	{
+		renderGameOver();
+		gameOver = true;
+	}
 }
 
 function move()
