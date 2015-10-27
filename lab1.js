@@ -20,11 +20,11 @@ var isWorldMoving = false;
 
 var timeStart;
 var timeStopp;
-var transitionTime = 125;	// the time a transition (movement or rotation) should occupy (in ms)
-var transitionTimeFast = 75; 	// the time a fast transition (moving a tetromino down) should occupy per block (in ms)
+var transitionTime = 175;	// the time a transition (movement or rotation) should occupy (in ms)
+var transitionTimeFast = 25; 	// the time a fast transition (moving a tetromino down) should occupy per block (in ms)
 
 var isGravity = true;
-var gravity = 2000;		// the time after which a tetromino falls one block (in ms)
+var gravity = 1000;		// the time after which a tetromino falls one block (in ms)
 var lastFall;
 
 
@@ -55,7 +55,7 @@ function webGLstart()
 	
 
 	// Configure Webgl
-	gl.viewport( 0, 0, canvas.width, canvas.height );
+	gl.viewport( 0, 0, canvas.width, canvas.height );		/// viewport: one for playingfield and a second viewport (in the same canvas) for the preview 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
@@ -103,18 +103,20 @@ function render()
 	{
 		if( timeStopp - lastFall > gravity )
 		{
-			if( !checkCollision(tetromino, xTranslate, yTranslate - 1) )
+			if( !checkCollision(tetromino, xTranslate, yTranslate - 1) ) 	/// TODO don't check collision in advance but instead with the fall that would cause the actual collision.
+																			/// if this is the case -> endOfTurn
 			{
 				if( !moveDown )
 					yTranslate -= 1;
 				moveDown = true;
-//				lastFall = timeStopp;
+				lastFall = timeStopp;
 			}
 			else
 			{
 				// render tetromino to avoid graphical glitch where the tetromino would dissappear for a frame
 				tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
-				addTetromino();		/// TODO: instead of addTetromino make here a checkRow
+				endOfTurn();
+				//addTetromino();		/// TODO: instead of addTetromino make here a checkRow
 									/// when checkrow (including with moveworld) is complete add tetromino
 			}
 		}	
@@ -187,7 +189,6 @@ function controls()
 					{
 						moveDownFast = true;
 						moveDown = false;
-						/// TODO: check how many units can be moved down to the first collision
 						for( var i = 0; i < worldCoordinates.yDim; i++ )
 						{
 							if( checkCollision(tetromino, xTranslate, yTranslate - i ) )
@@ -272,29 +273,6 @@ function setScalar(sliderValue)
 
 function addTetromino()
 {	
-	if( tetromino )		// returns true if tetromino is not null or undefined
-	{
-		for( var i = 0; i < 4; i++ )		// numOfBlocks is always 4
-		{
-			var bl = new Block( mat4.create(), tetromino.color );
-			mat4.translate(bl.modelViewMatrix, bl.modelViewMatrix, 
-					vec3.fromValues(
-							Math.floor(xTranslate + tetromino.relativeCoordinates[i][0]),	//x
-							Math.floor(yTranslate + tetromino.relativeCoordinates[i][1]),	//y
-							0));
-			bl.addVertexBuffer( gl, gl.createBuffer() );
-			bl.addColorBuffer( gl, gl.createBuffer() );
-					
-			// console.log(xTranslate + tetromino.relativeCoordinates[i][0]);
-			// console.log(yTranslate + tetromino.relativeCoordinates[i][1]);
-
-			worldCoordinates.addBlock( 
-					Math.floor(xTranslate + tetromino.relativeCoordinates[i][0]),
-					Math.floor(yTranslate + tetromino.relativeCoordinates[i][1]),
-					bl );
-		}	
-	}
-	
 	console.log(worldCoordinates.printWorldCoordinates());
 			
 	rotateCounterClockWise = rotateClockWise = false;
@@ -393,10 +371,12 @@ function moveTetromino()
 			deltaYTranslate = yTranslate;
 			moveDownFast = false;
 			
-			// we reached collision, add new tetromnio
+			// we reached collision -> end of turn
+			// render tetromino once more to avoid glitch were the tetromino would vanish for a frame
 			tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
-			addTetromino();			/// TODO: instead of addTetromino make here a checkRow
+//			addTetromino();			/// TODO: instead of addTetromino make here a checkRow
 									/// when checkrow (including with moveworld) is complete add tetromino
+			endOfTurn();
 		}
 	}
 	
@@ -456,10 +436,65 @@ function checkCollision( tetromino, xTrans, yTrans, rotationMatrix )
 	return false;	
 }
 
-function isRowComplete()
+function endOfTurn()
 {
+	copyTetrominoIntoWorldCoordinates();
+	
+	rowsComplete();
+
+	addTetromino();
+//	/// addTetromino
+}
+
+function copyTetrominoIntoWorldCoordinates()
+{
+	if( tetromino )		// returns true if tetromino is not null or undefined
+	{
+		for( var i = 0; i < 4; i++ )		// numOfBlocks is always 4
+		{
+			var bl = new Block( mat4.create(), tetromino.color );
+			mat4.translate(bl.modelViewMatrix, bl.modelViewMatrix, 
+					vec3.fromValues(
+							Math.floor(xTranslate + tetromino.relativeCoordinates[i][0]),	//x
+							Math.floor(yTranslate + tetromino.relativeCoordinates[i][1]),	//y
+							0));
+			bl.addVertexBuffer( gl, gl.createBuffer() );
+			bl.addColorBuffer( gl, gl.createBuffer() );
+					
+			// console.log(xTranslate + tetromino.relativeCoordinates[i][0]);
+			// console.log(yTranslate + tetromino.relativeCoordinates[i][1]);
+
+			worldCoordinates.addBlock( 
+					Math.floor(xTranslate + tetromino.relativeCoordinates[i][0]),
+					Math.floor(yTranslate + tetromino.relativeCoordinates[i][1]),
+					bl );
+		}	
+	}
+}
+
+function rowsComplete()
+{
+	var rows = [];
+	for( var i = 0; i < 4; i++ )
+	{
+		console.log( "check row " + yTranslate + "+" + Math.floor(tetromino.relativeCoordinates[i][1]) );
+		// check if the row is complete, if it is and the row is not yet in the array push it there
+		if( worldCoordinates.isRowComplete( yTranslate + Math.floor(tetromino.relativeCoordinates[i][1]) ) )
+			if( rows.indexOf( (yTranslate + Math.floor(tetromino.relativeCoordinates[i][1]))) == -1 )
+				rows.push( yTranslate + Math.floor(tetromino.relativeCoordinates[i][1]) );
+	}
+	
+	// when removing mulitpe rows it is important to start from the highest row
+	// by this no row that will be deleted will be copied to the lower row.
+	// -> sort in descending order. Weird javascript sorts only ascending by string value therefore:
+	console.log("rows: " + rows);
+	rows.sort(function(a, b){return b-a});
+	console.log("sorted rows: " + rows);
+	
+	for( var i = 0; i < rows.length; i++ )
+		worldCoordinates.removeRowAndMoveDown( rows[i] );
+	
 	/// check which rows are complete (using worldcoordinates)
 	/// delete rows (using worldcoordinates)
-	/// animation: if worldCoordinates.isRowComplete(j) then isWorldMoving = true
-	/// addTetromino
+	/// TODO: animation?: if worldCoordinates.isRowComplete(j) then isWorldMoving = true
 }

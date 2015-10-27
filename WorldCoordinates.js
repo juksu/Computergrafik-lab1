@@ -44,11 +44,18 @@ WorldCoordinates.prototype.removeBlock = function( x, y )
 
 WorldCoordinates.prototype.isRowComplete = function( y )
 {
+	console.log("is Row " + y + " complete");
 	for( var i = 0; i < this.xDim; i++ )
+	{		
+		console.log("check collision for (" + i + "," + y + ")");
 		if( !(this.checkCollision( i, y )) )
-			return true;
+		{
+			console.log("no row!");
+			return false;
+		}
+	}
 	
-	return false;
+	return true;
 }
 
 WorldCoordinates.prototype.removeRow = function( y )
@@ -57,18 +64,30 @@ WorldCoordinates.prototype.removeRow = function( y )
 		this.removeBlock( i, y );
 }
 
-WorldCoordinates.prototype.moveDownAbove = function( y, moveDownBy )
+WorldCoordinates.prototype.removeRowAndMoveDown = function( y )
 {
-	// move all rows above y down by the given units
-	var j = y;
-	for( var i = 0; i < this.xDim; i++ )
-		for( ; j < this.yDim-moveDownBy; j++ )
-			this.coordinates[i][j] = this.coordinates[i][j+moveDownBy];
+	console.log( "removeRowAndMoveDown " + y );
+	if( y < this.yDim - 1 )
+	{
+		for( ; y < this.yDim - 1; y++ )
+		{	
+			for( var i = 0; i < this.xDim; i++ )
+			{
+			this.coordinates[i][y] = this.coordinates[i][y+1];
 			
-	// add empty top row(s)
-	for( var i = 0; i < this.xDim; i++ )
-		for( ; j < this.yDim; j++ )
-			this.coordinates[i][j] = false;
+			if( this.coordinates[i][y] )
+				{
+					mat4.translate(this.coordinates[i][y].modelViewMatrix, 
+							this.coordinates[i][y].modelViewMatrix, 
+							vec4.fromValues(0,-1,0));
+				}
+			}
+		}
+		// add empty top row
+		for( var i = 0; i < this.xDim; i++ )
+			this.coordinates[i][this.yDim - 1] = false;	
+	}
+	// else do nothing
 }
 
 WorldCoordinates.prototype.printWorldCoordinates = function()
