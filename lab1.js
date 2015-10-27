@@ -16,6 +16,8 @@ var moveRight = false;
 var moveDown = false;
 var moveDownFast = false;
 
+var isWorldMoving = false;
+
 var timeStart;
 var timeStopp;
 var transitionTime = 125;	// the time a transition (movement or rotation) should occupy (in ms)
@@ -106,20 +108,25 @@ function render()
 				if( !moveDown )
 					yTranslate -= 1;
 				moveDown = true;
-				lastFall = timeStopp;
+//				lastFall = timeStopp;
 			}
 			else
 			{
 				// render tetromino to avoid graphical glitch where the tetromino would dissappear for a frame
 				tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
-				addTetromino();
+				addTetromino();		/// TODO: instead of addTetromino make here a checkRow
+									/// when checkrow (including with moveworld) is complete add tetromino
 			}
 		}	
 	}
 	/// TODO if moveWorld moveWorld(), else if( rotate...) moveActive()
 	/// mutually exclusive
-	if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveDown || moveDownFast )
-		move();
+	if( isWorldMoving )
+	{
+		moveWorld();
+	}
+	else if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveDown || moveDownFast )
+		moveTetromino();
 		
 	timeStart = timeStopp;
 	
@@ -146,102 +153,100 @@ function controls()
 {
 	//event listener in case of button press
 	document.addEventListener("keydown", function(event) {
-				
-				/// TODO: check in all events if collision is happening
-				switch(event.keyCode)
-				{
-					case 76:	// l
-					case 37:	// arrow left
-						if( !checkCollision( tetromino, xTranslate - 1, yTranslate) )
+			switch(event.keyCode)
+			{
+				case 76:	// l
+				case 37:	// arrow left
+					if( !checkCollision( tetromino, xTranslate - 1, yTranslate) )
+					{
+						if( !moveLeft )
+							xTranslate -= 1;
+						moveLeft = true;
+						moveRight = false;
+						// console.log("pressed left");
+					}
+					break;							
+				case 85:	// u
+				case 38:	// arrow up
+					isGravity = false;
+					break;
+				case 82:	// r
+				case 39:	// arrow right
+					if( !checkCollision(tetromino, xTranslate + 1, yTranslate) )
+					{
+						if( !moveRight )
+							xTranslate += 1;
+						moveRight = true;
+						moveLeft = false;
+						// console.log("pressed right");
+					}
+					break;
+				case 68:	// d
+				case 40: 	// arrow down					
+					if( isGravity )		// gravity is in place.
+					{
+						moveDownFast = true;
+						moveDown = false;
+						/// TODO: check how many units can be moved down to the first collision
+						for( var i = 0; i < worldCoordinates.yDim; i++ )
 						{
-							if( !moveLeft )
-								xTranslate -= 1;
-							moveLeft = true;
-							moveRight = false;
-							// console.log("pressed left");
-						}
-						break;							
-					case 85:	// u
-					case 38:	// arrow up
-						isGravity = false;
-						break;
-					case 82:	// r
-					case 39:	// arrow right
-						if( !checkCollision(tetromino, xTranslate + 1, yTranslate) )
-						{
-							if( !moveRight )
-								xTranslate += 1;
-							moveRight = true;
-							moveLeft = false;
-							// console.log("pressed right");
-						}
-						break;
-					case 68:	// d
-					case 40: 	// arrow down					
-						if( isGravity )		// gravity is in place.
-						{
-							moveDownFast = true;
-							moveDown = false;
-							/// TODO: check how many units can be moved down to the first collision
-							for( var i = 0; i < worldCoordinates.yDim; i++ )
+							if( checkCollision(tetromino, xTranslate, yTranslate - i ) )
 							{
-								if( checkCollision(tetromino, xTranslate, yTranslate - i ) )
-								{
-									yTranslate -= (i-1);
-									break;
-								}
+								yTranslate -= (i-1);
+								break;
 							}
 						}
-						else
-							isGravity = true;	// reinstate gravity
-						// console.log("pressed down");
-						break;
-					case 49: 	// 1
-						if( !checkCollision(tetromino, xTranslate, yTranslate, -1) )
+					}
+					else
+						isGravity = true;	// reinstate gravity
+					// console.log("pressed down");
+					break;
+				case 49: 	// 1
+					if( !checkCollision(tetromino, xTranslate, yTranslate, -1) )
+					{
+						if( !rotateCounterClockWise )
 						{
-							if( !rotateCounterClockWise )
+							theta += Math.PI/2;
+							var temp;
+							// a rotation changes also the relative coordinates
+							// therefore they need to be changed if we have a rotation
+							for( var i = 0; i < 4; i++ )
 							{
-								theta += Math.PI/2;
-								var temp;
-								// a rotation changes also the relative coordinates
-								// therefore they need to be changed if we have a rotation
-								for( var i = 0; i < 4; i++ )
-								{
-									temp = tetromino.relativeCoordinates[i][0];
-									tetromino.relativeCoordinates[i][0] = -tetromino.relativeCoordinates[i][1];
-									tetromino.relativeCoordinates[i][1] = temp;
-								}
+								temp = tetromino.relativeCoordinates[i][0];
+								tetromino.relativeCoordinates[i][0] = -tetromino.relativeCoordinates[i][1];
+								tetromino.relativeCoordinates[i][1] = temp;
 							}
-							rotateCounterClockWise = true;
-							rotateClockWise = false;
-							// console.log("pressed 1");
 						}
-						break;
-					case 51:	// 3
-						if( !checkCollision(tetromino, xTranslate, yTranslate, 1) )
+						rotateCounterClockWise = true;
+						rotateClockWise = false;
+						// console.log("pressed 1");
+					}
+					break;
+				case 51:	// 3
+					if( !checkCollision(tetromino, xTranslate, yTranslate, 1) )
+					{
+						if( !rotateClockWise )
 						{
-							if( !rotateClockWise )
+							theta -= Math.PI/2;
+							var temp;
+							// a rotation changes also the relative coordinates
+							// therefore they need to be changed if we have a rotation
+							for( var i = 0; i < 4; i++ )
 							{
-								theta -= Math.PI/2;
-								var temp;
-								// a rotation changes also the relative coordinates
-								// therefore they need to be changed if we have a rotation
-								for( var i = 0; i < 4; i++ )
-								{
-									temp = tetromino.relativeCoordinates[i][0];
-									tetromino.relativeCoordinates[i][0] = tetromino.relativeCoordinates[i][1];
-									tetromino.relativeCoordinates[i][1] = -temp;
-								}			
-							}
-							rotateClockWise = true;
-							rotateCounterClockWise = false;
-							// console.log("pressed 3");
+								temp = tetromino.relativeCoordinates[i][0];
+								tetromino.relativeCoordinates[i][0] = tetromino.relativeCoordinates[i][1];
+								tetromino.relativeCoordinates[i][1] = -temp;
+							}			
 						}
-						break;
-					case 13:	// enter
-						addTetromino();
-				}
-			} );	
+						rotateClockWise = true;
+						rotateCounterClockWise = false;
+						// console.log("pressed 3");
+					}
+					break;
+				case 13:	// enter
+					addTetromino();
+			}
+	} );	
 }
 
 function setScalar(sliderValue)
@@ -320,7 +325,7 @@ function addTetromino()
 	}
 }
 
-function move()
+function moveTetromino()
 {
 	// calculate delta value for rotation
 	var rotation = (Math.PI/2) * (timeStopp - timeStart) / transitionTime;
@@ -390,7 +395,8 @@ function move()
 			
 			// we reached collision, add new tetromnio
 			tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
-			addTetromino();			
+			addTetromino();			/// TODO: instead of addTetromino make here a checkRow
+									/// when checkrow (including with moveworld) is complete add tetromino
 		}
 	}
 	
@@ -407,6 +413,11 @@ function move()
 		deltaXTranslate = xTranslate;
 		deltaYTranslate = yTranslate;
 	}
+}
+
+function moveWorld()
+{
+	/// TODO: animation for moving the world (droping rows)
 }
 
 function checkCollision( tetromino, xTrans, yTrans, rotationMatrix )
@@ -443,4 +454,12 @@ function checkCollision( tetromino, xTrans, yTrans, rotationMatrix )
 		}
 	}
 	return false;	
+}
+
+function isRowComplete()
+{
+	/// check which rows are complete (using worldcoordinates)
+	/// delete rows (using worldcoordinates)
+	/// animation: if worldCoordinates.isRowComplete(j) then isWorldMoving = true
+	/// addTetromino
 }

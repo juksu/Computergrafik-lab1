@@ -42,7 +42,7 @@ WorldCoordinates.prototype.removeBlock = function( x, y )
 	this.coordinates[x][y] = false;
 }
 
-WorldCoordinates.prototype.isRowFull = function( y )
+WorldCoordinates.prototype.isRowComplete = function( y )
 {
 	for( var i = 0; i < this.xDim; i++ )
 		if( !(this.checkCollision( i, y )) )
