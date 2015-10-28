@@ -9,6 +9,9 @@ var modelViewMatrixLoc;
 var perspectiveMatrixLoc;
 var perspectiveMatrix = [];
 
+var renderID;
+var renderAnimID;
+
 var rotateCounterClockWise = false;
 var rotateClockWise = false;
 var moveLeft = false;
@@ -43,6 +46,7 @@ var worldCoordinates;
 var tetromino;
 
 var gameOver = false;
+var worldAnimation = false;
 
 function webGLstart()
 {
@@ -94,6 +98,7 @@ function webGLstart()
 
 function render()
 {
+	console.log("render()");
 	gl.clear( gl.COLOR_BUFFER_BIT );
 
 	worldCoordinates.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc );
@@ -136,10 +141,31 @@ function render()
 		
 	// request browser to display the rendering the next time it wants to refresh the display
 	// and then call the render function recorsively
-	if( !gameOver )
-		requestAnimFrame(render);
+	if( !gameOver && !worldAnimation )
+		renderID = requestAnimFrame(render);
 	else
-		cancelAnimFrame(render);
+		cancelAnimationFrame(renderID);
+}
+
+function renderRowRemovement()
+{
+	console.log("renderRowRemovement()");
+	gl.clear( gl.COLOR_BUFFER_BIT );
+	timeStopp = Date.now();
+	worldCoordinates.rowRemoveAnimation(gl, vPosition, vColor, modelViewMatrixLoc)
+	
+	timeStopp - timeStart < 1000
+	
+	if( timeStopp - timeStart < 1000 )
+	{
+//		console.log(timeStopp - timeStart);
+		requestAnimFrame(renderRowRemovement);
+	}
+	else
+	{
+		cancelAnimFrame(renderRowRemovement);
+		addTetromino();
+	}
 }
 
 function renderGameOver()
@@ -440,8 +466,20 @@ function endOfTurn()
 {
 	copyTetrominoIntoWorldCoordinates();
 	
+	
+	cancelAnimFrame(renderID);
+//	renderID = undefined;
 	rowsComplete();
+	//~ if( rowsComplete() );
+	//~ {
+		//~ console.log("row is complete, start animation");
+		//~ renderRowRemovement();
+	//~ }
+	
+//	aDifferentRender();
+//	renderRowRemovement();
 
+	worldAnimation = false;
 	addTetromino();
 //	/// addTetromino
 }
@@ -488,13 +526,48 @@ function rowsComplete()
 	// by this no row that will be deleted will be copied to the lower row.
 	// -> sort in descending order. Weird javascript sorts only ascending by string value therefore:
 	console.log("rows: " + rows);
+	console.log("rows.length: " + rows.length);
 	rows.sort(function(a, b){return b-a});
 	console.log("sorted rows: " + rows);
 	
-	for( var i = 0; i < rows.length; i++ )
-		worldCoordinates.removeRowAndMoveDown( rows[i] );
+//	worldCoordinates.removeRowsAndMoveDown( rows );
 	
+	for( var i = 0; i < rows.length; i++ )
+		worldCoordinates.removeRowsAndMoveDown( rows[i] );
+	
+	if( rows.length > 0 )
+	{
+		timeStart = Date.now();
+		worldAnimation = true;
+		renderRowRemovement();
+	}
+//	else
+//		return false;
+	
+//	window.cancelAnimFrame(render);		/// TODO: thats how I can stop the one animation and play the other!!!
+	//renderRowRemovement();
+	
+//	aDifferentRender()
 	/// check which rows are complete (using worldcoordinates)
 	/// delete rows (using worldcoordinates)
 	/// TODO: animation?: if worldCoordinates.isRowComplete(j) then isWorldMoving = true
+}
+
+
+function aDifferentRender()
+{
+	timeStopp = Date.now();
+	
+	tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
+	//requestAnimFrame(render);
+	
+	if( timeStopp - timeStart < 2000 )
+		window.requestAnimFrame(aDifferentRender);
+	else
+	{
+		window.cancelAnimFrame(aDifferentRender);
+//		addTetromino();
+//		window.requestAnimFrame(render);
+	}
+	
 }
