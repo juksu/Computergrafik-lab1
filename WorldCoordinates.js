@@ -4,7 +4,7 @@ var WorldCoordinates = function( xDim, yDim )
 	// Example a value of x = 0, y = 0, would refer to the block 0 <= x < 1, 0 <= y < 1.
 	this.xDim = xDim;
 	this.yDim = yDim;
-	this.lowestYAnimation = 0;
+	this.rowsToRemove = [];
 	
 	// create the world coordinates
 	// coordinates will have either false if not occupied or an Block object if occupied
@@ -20,7 +20,6 @@ var WorldCoordinates = function( xDim, yDim )
 
 WorldCoordinates.prototype.checkCollision = function( x, y )
 {
-//	console.log("check for x = " + x + ", y = " + y );
 	if( x < 0 || x >= this.xDim )
 		return true;
 	
@@ -45,16 +44,9 @@ WorldCoordinates.prototype.removeBlock = function( x, y )
 
 WorldCoordinates.prototype.isRowComplete = function( y )
 {
-	//console.log("is Row " + y + " complete");
-	for( var i = 0; i < this.xDim; i++ )
-	{		
-		//console.log("check collision for (" + i + "," + y + ")");
+	for( var i = 0; i < this.xDim; i++ )	
 		if( !(this.checkCollision( i, y )) )
-		{
-			//console.log("no row!");
 			return false;
-		}
-	}
 	
 	return true;
 }
@@ -65,35 +57,40 @@ WorldCoordinates.prototype.removeRow = function( y )
 		this.removeBlock( i, y );
 }
 
-WorldCoordinates.prototype.removeRowsAndMoveDown = function( y )		/// instead provide here array -> array.length will be rows to move down
-{
-	//console.log( "removeRowAndMoveDown " + y );
-	
-	/// TODO maybe array here
-	//this.lowestYAnimation = y;
-
-	if( y < this.yDim - 1 )
+WorldCoordinates.prototype.removeRowsAndMoveDown = function()
+{	
+	// start from highest row
+	for( var k = this.rowsToRemove.length -1 ; k >= 0; k-- )
 	{
-		for( ; y < this.yDim - 1; y++ )
-		{	
+		for( var j = this.rowsToRemove[k]; j < this.yDim-1; j++ )
+		{
 			for( var i = 0; i < this.xDim; i++ )
 			{
-				this.coordinates[i][y] = this.coordinates[i][y+1];
+				this.coordinates[i][j] = this.coordinates[i][j+1];
+			}
+			// add empty top row
+			for( var i = 0; i < this.xDim; i++ )
+				this.coordinates[i][this.yDim-1] = false;
+		}	
+	}
+}
 
-				if( this.coordinates[i][y] )
-				{
-					mat4.translate(this.coordinates[i][y].modelViewMatrix, 
-							this.coordinates[i][y].modelViewMatrix, 
-							vec4.fromValues(0,-1,0));
-				}
+// use this to perfectly align the drawn position of the blocks with their worldcoordinates position
+WorldCoordinates.prototype.rebuildModelViewMatrices = function()
+{
+	for( var i = 0; i < this.xDim; i++ )
+		for( var j = 0; j < this.yDim; j++ )
+		{
+			if( this.coordinates[i][j] !== false )
+			{
+				mat4.identity(this.coordinates[i][j].modelViewMatrix);
+				mat4.translate(this.coordinates[i][j].modelViewMatrix, 
+						this.coordinates[i][j].modelViewMatrix, 
+						vec4.fromValues(i,j,0));
 			}
 		}
-	}
-	for( var i = 0; i < this.xDim; i++ )
-			this.coordinates[i][this.yDim - 1] = false;		
-	
-	/// TODO: after this play the rowRemoveAnimation
 }
+
 WorldCoordinates.prototype.printWorldCoordinates = function()
 {
 	var string = "";
@@ -131,33 +128,50 @@ WorldCoordinates.prototype.renderWorld = function( gl, vPosition, vColor, modelV
 		}	
 }
 
-WorldCoordinates.prototype.rowRemoveAnimation = function( gl, vPosition, vColor, modelViewMatrixLoc )		/// TODO: call this function in function for animateWorld
+WorldCoordinates.prototype.removeRowAnimation = function( gl, vPosition, vColor, modelViewMatrixLoc, deltaY )
 {
-	deltaY = 0.1;
-	
-	for( var i = 0; i < this.xDim; i++ )
-		for( var j = 0; j < this.lowestYAnimation; j++ )
+	// scale the rows out of existance
+	for( var k = 0; k < this.rowsToRemove.length; k++ )
+	{
+		for( var i = 0; i < this.xDim; i++ )
 		{
-			if( this.coordinates[i][j] !== false )
-				this.coordinates[i][j].renderBlock( gl, vPosition, vColor, modelViewMatrixLoc );
+			mat4.scale(this.coordinates[i][this.rowsToRemove[k]].modelViewMatrix, 
+					this.coordinates[i][this.rowsToRemove[k]].modelViewMatrix, 
+					vec3.fromValues(deltaY,deltaY,1));
 		}
-	
-	// change the model View Matrix for the Movement
-	for( var i = 0; i < this.xDim; i++ )
-		for( var j = this.lowestYAnimation; j < this.yDim; j++ )
-		{
-			if( this.coordinates[i][j] )
+	}
+	this.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc);
+}
+
+
+WorldCoordinates.prototype.dropWorldAnimation = function( gl, vPosition, vColor, modelViewMatrixLoc, deltaY )		/// TODO: call this function in function for animateWorld
+{
+	// a row > rowsToRemove[k] and row < rowsToRemove[k+1] drops by deltaY * (k+1)  (zero based)
+	var k = 0;
+	for( ; k < this.rowsToRemove.length - 1; k++ )
+		for( var j = this.rowsToRemove[k]; j < this.rowsToRemove[k+1]; j++ )
+			for( var i = 0; i < this.xDim; i++ )
 			{
-				mat4.translate(this.coordinates[i][j].modelViewMatrix, 
+				if( this.coordinates[i][j] !== false )
+				{
+					mat4.translate(this.coordinates[i][j].modelViewMatrix, 
 						this.coordinates[i][j].modelViewMatrix, 
-						vec4.fromValues(0,deltaY,0));
+						vec4.fromValues(0,deltaY*(k+1),0));
+				}
 			}
-		}
+
+			
+	// rows above the highest rowToRemove	
+	for( var j = this.rowsToRemove[k]; j < this.yDim; j++ )
+			for( var i = 0; i < this.xDim; i++ )
+			{
+				if( this.coordinates[i][j] !== false )
+				{
+					mat4.translate(this.coordinates[i][j].modelViewMatrix, 
+						this.coordinates[i][j].modelViewMatrix, 
+						vec4.fromValues(0,deltaY*(k+1),0));
+				}
+			}
 	
-	for( var i = 0; i < this.xDim; i++ )
-		for( var j = this.lowestYAnimation; j < this.yDim; j++ )
-		{
-			if( this.coordinates[i][j] !== false )
-				this.coordinates[i][j].renderBlock( gl, vPosition, vColor, modelViewMatrixLoc );
-		}
+	this.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc);
 }
