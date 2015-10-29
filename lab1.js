@@ -90,23 +90,34 @@ function webGLstart()
 	gl.uniformMatrix4fv(perspectiveMatrixLoc, false, new Float32Array(perspectiveMatrix));
 			
 	controls();
-	timeStart = Date.now();
+//	timeStart = Date.now();
+	timeStart = 0;
 	lastFall = timeStart;
 	
-	render();
+	//renderID = window.requestAnimationFrame(render);
+	renderID = requestAnimFrame(render);
 }
 
-function render()
+function render(now)	// requestAnimationFrame passes us the time since the page was loaded
+						// use this to calculate framerateindependent animations
 {
+	
 	console.log("render()");
+	renderID = requestAnimFrame(render);
 	gl.clear( gl.COLOR_BUFFER_BIT );
 
 	worldCoordinates.renderWorld(gl, vPosition, vColor, modelViewMatrixLoc );
 	
-	timeStopp = Date.now();
+//	timeStopp = Date.now();
+//	timeStopp = now;
+	timeStopp = now;
+	//console.log("now " + now);
+	//console.log("Date.now()" + Date.now());
 	if( isGravity && !moveDownFast )
 	{
-		if( timeStopp - lastFall > gravity )
+		
+		
+		if( now - lastFall > gravity )
 		{
 			if( !checkCollision(tetromino, xTranslate, yTranslate - 1) ) 	/// TODO don't check collision in advance but instead with the fall that would cause the actual collision.
 																			/// if this is the case -> endOfTurn
@@ -114,7 +125,7 @@ function render()
 				if( !moveDown )
 					yTranslate -= 1;
 				moveDown = true;
-				lastFall = timeStopp;
+				lastFall = now;
 			}
 			else
 			{
@@ -135,37 +146,62 @@ function render()
 	else if( rotateCounterClockWise || rotateClockWise || moveLeft || moveRight || moveDown || moveDownFast )
 		moveTetromino();
 		
-	timeStart = timeStopp;
+	timeStart = now;
+	
 	
 	tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
-		
+	
+	
+//	renderID = window.requestAnimationFrame(render);	
 	// request browser to display the rendering the next time it wants to refresh the display
 	// and then call the render function recorsively
-	if( !gameOver && !worldAnimation )
-		renderID = requestAnimFrame(render);
-	else
-		cancelAnimationFrame(renderID);
+//	if( !gameOver && !worldAnimation )
+		
+//	else
+//		cancelAnimationFrame(renderID);
 }
 
-function renderRowRemovement()
+function renderRowRemovement(now)
 {
-	console.log("renderRowRemovement()");
-	gl.clear( gl.COLOR_BUFFER_BIT );
-	timeStopp = Date.now();
-	worldCoordinates.rowRemoveAnimation(gl, vPosition, vColor, modelViewMatrixLoc)
+//	cancelAnimFrame(renderID);
 	
-	timeStopp - timeStart < 1000
+	//timeStopp = Date.now();
+	timeStopp = now;
+	console.log("timeStart " + timeStart);
+	console.log("timeStop " + timeStopp);
+	console.log("time " + (timeStopp - timeStart));
 	
-	if( timeStopp - timeStart < 1000 )
+	if( timeStopp - timeStart < 2000 )
 	{
-//		console.log(timeStopp - timeStart);
-		requestAnimFrame(renderRowRemovement);
+		//renderID = window.requestAnimationFrame(renderRowRemovement);
+		renderID = requestAnimFrame(renderRowRemovement);
 	}
 	else
 	{
-		cancelAnimFrame(renderRowRemovement);
-		addTetromino();
+		//window.requestAnimationFrame(render);
+		requestAnimFrame(render);
 	}
+	
+	console.log("renderRowRemovement()");
+//	console.log("now " + now );
+	gl.clear( gl.COLOR_BUFFER_BIT );
+//	timeStopp = Date.now();
+//	timeStopp = now;
+	worldCoordinates.rowRemoveAnimation(gl, vPosition, vColor, modelViewMatrixLoc)
+	
+//	timeStopp - timeStart < 1000
+	
+//	timeStart = timeStopp
+//	if( now < 2000 )
+//	{
+//		console.log(timeStopp - timeStart);
+//		requestAnimFrame(renderRowRemovement);
+//	}
+//	else
+//	{
+//		cancelAnimationFrame(renderRowRemovementID);
+//		addTetromino();
+//	}
 }
 
 function renderGameOver()
@@ -308,7 +344,7 @@ function addTetromino()
 
 	// spawn new tetromino at the top middle
 	deltaXTranslate = xTranslate = worldCoordinates.xDim / 2;
-	deltaYTranslate = yTranslate = worldCoordinates.yDim - 1;
+	deltaYTranslate = yTranslate = worldCoordinates.yDim - 4;
 	deltaTheta = theta = 0;
 
 	tetromino = new Tetromino();
@@ -389,9 +425,9 @@ function moveTetromino()
 	
 	if( moveDownFast )
 	{
-		console.log("moveDownFast = true");
+		//console.log("moveDownFast = true");
 		deltaYTranslate -= (timeStopp - timeStart) / transitionTimeFast;
-		console.log("deltaYTranslate " + deltaYTranslate );
+		//console.log("deltaYTranslate " + deltaYTranslate );
 		if( deltaYTranslate <= yTranslate )
 		{
 			deltaYTranslate = yTranslate;
@@ -462,25 +498,34 @@ function checkCollision( tetromino, xTrans, yTrans, rotationMatrix )
 	return false;	
 }
 
+
 function endOfTurn()
 {
 	copyTetrominoIntoWorldCoordinates();
-	
-	
-	cancelAnimFrame(renderID);
-//	renderID = undefined;
-	rowsComplete();
-	//~ if( rowsComplete() );
-	//~ {
-		//~ console.log("row is complete, start animation");
-		//~ renderRowRemovement();
-	//~ }
+		
+	timeStart = Date.now();
+	if( rowsComplete() )
+	{
+		//window.cancelAnimationFrame(renderID);
+		cancelAnimFrame(renderID);
+		console.log("row is complete, start animation");
+		//window.requestAnimationFrame(renderRowRemovement);
+		//requestAnimFrame(renderRowRemovement);
+		renderRowRemovement();
+		addTetromino();
+		//renderID = window.requestAnimationFrame(render);
+//		window.requestAnimationFrame(render);
+	}
+	else
+	{
+		addTetromino();
+	}
 	
 //	aDifferentRender();
 //	renderRowRemovement();
 
-	worldAnimation = false;
-	addTetromino();
+//	worldAnimation = false;
+//	addTetromino();		///TODO: bug -> new tetromino not shown but it can be controlled
 //	/// addTetromino
 }
 
@@ -515,7 +560,7 @@ function rowsComplete()
 	var rows = [];
 	for( var i = 0; i < 4; i++ )
 	{
-		console.log( "check row " + yTranslate + "+" + Math.floor(tetromino.relativeCoordinates[i][1]) );
+		// console.log( "check row " + yTranslate + "+" + Math.floor(tetromino.relativeCoordinates[i][1]) );
 		// check if the row is complete, if it is and the row is not yet in the array push it there
 		if( worldCoordinates.isRowComplete( yTranslate + Math.floor(tetromino.relativeCoordinates[i][1]) ) )
 			if( rows.indexOf( (yTranslate + Math.floor(tetromino.relativeCoordinates[i][1]))) == -1 )
@@ -528,7 +573,7 @@ function rowsComplete()
 	console.log("rows: " + rows);
 	console.log("rows.length: " + rows.length);
 	rows.sort(function(a, b){return b-a});
-	console.log("sorted rows: " + rows);
+	// console.log("sorted rows: " + rows);
 	
 //	worldCoordinates.removeRowsAndMoveDown( rows );
 	
@@ -538,11 +583,12 @@ function rowsComplete()
 	if( rows.length > 0 )
 	{
 		timeStart = Date.now();
-		worldAnimation = true;
-		renderRowRemovement();
+//		worldAnimation = true;
+//		renderRowRemovement();
+		return true
 	}
-//	else
-//		return false;
+	else
+		return false;
 	
 //	window.cancelAnimFrame(render);		/// TODO: thats how I can stop the one animation and play the other!!!
 	//renderRowRemovement();

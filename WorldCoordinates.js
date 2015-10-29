@@ -45,13 +45,13 @@ WorldCoordinates.prototype.removeBlock = function( x, y )
 
 WorldCoordinates.prototype.isRowComplete = function( y )
 {
-	console.log("is Row " + y + " complete");
+	//console.log("is Row " + y + " complete");
 	for( var i = 0; i < this.xDim; i++ )
 	{		
-		console.log("check collision for (" + i + "," + y + ")");
+		//console.log("check collision for (" + i + "," + y + ")");
 		if( !(this.checkCollision( i, y )) )
 		{
-			console.log("no row!");
+			//console.log("no row!");
 			return false;
 		}
 	}
@@ -67,7 +67,7 @@ WorldCoordinates.prototype.removeRow = function( y )
 
 WorldCoordinates.prototype.removeRowsAndMoveDown = function( y )		/// instead provide here array -> array.length will be rows to move down
 {
-	console.log( "removeRowAndMoveDown " + y );
+	//console.log( "removeRowAndMoveDown " + y );
 	
 	/// TODO maybe array here
 	//this.lowestYAnimation = y;
@@ -133,7 +133,7 @@ WorldCoordinates.prototype.renderWorld = function( gl, vPosition, vColor, modelV
 
 WorldCoordinates.prototype.rowRemoveAnimation = function( gl, vPosition, vColor, modelViewMatrixLoc )		/// TODO: call this function in function for animateWorld
 {
-	deltaY = 0.02;
+	deltaY = 0.1;
 	
 	for( var i = 0; i < this.xDim; i++ )
 		for( var j = 0; j < this.lowestYAnimation; j++ )
