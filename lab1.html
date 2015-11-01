@@ -20,15 +20,19 @@
 			
 			attribute vec4 vPosition;
 			attribute vec4 vColor;
+			attribute vec2 vTexCoord;
 			
 			uniform mat4 modelViewMatrix;
 			uniform mat4 perspectiveMatrix;
+			
 			varying vec4 fColor;
+			varying vec2 fTexCoord;
 
 			void main()
 			{
 				gl_Position = perspectiveMatrix * modelViewMatrix * vPosition;
 				fColor = vColor;
+				fTexCoord = vTexCoord;
 			}
 			
 		</script>
@@ -38,10 +42,15 @@
 			precision mediump float;
 			
 			varying vec4 fColor;
+			varying vec2 fTexCoord;
 
+			uniform sampler2D texture;
+			
 			void main()
 			{
-				gl_FragColor = fColor;
+			//	gl_FragColor = fColor * texture2D( texture, fTexCoord );
+				gl_FragColor = texture2D( texture, fTexCoord );
+			//	gl_FragColor = fColor;
 			}
 			
 		</script>
