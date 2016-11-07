@@ -120,8 +120,6 @@ WorldCoordinates.prototype.printWorldCoordinates = function()
 
 WorldCoordinates.prototype.renderWorld = function( gl, vPosition, vColor, modelViewMatrixLoc )
 {
-	/// TODO: render grid as well
-	
 	for( var i = 0; i < this.xDim; i++ )
 		for( var j = 0; j < this.yDim; j++ )
 		{

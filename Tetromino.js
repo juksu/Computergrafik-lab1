@@ -129,7 +129,7 @@ var Tetromino = function()
 		relativeCoordinates.push(vec2.fromValues(0.5,0.5));	
 	}
 
-	function spawnRandom(vertices, relativeCoordinates )
+	function spawnRandom(vertices, relativeCoordinates)
 	{
 		var random = Math.floor(Math.random() * 7);
 		
@@ -150,8 +150,6 @@ var Tetromino = function()
 			case 6: spawnJ(vertices, relativeCoordinates);
 					break;
 		}
-		
-		// add always the same texture to the same kind of tetromino, could be randomized as well
 	}
 	
 	function addColor(vertices)
@@ -170,16 +168,11 @@ var Tetromino = function()
 			
 		return col;	
 	}
-
+	
 	this.vertices = [];
 	this.relativeCoordinates = [];
-	
-//	this.textureImage = new Image();
-//	this.textureImage.onload = function() { configureTexture( this.textureImage ) };
-//	textureImage.src = "textures/tex0.gif";
-	
+
 	spawnRandom(this.vertices, this.relativeCoordinates);
-	
 	this.color = addColor(this.vertices);
 
 	this.modelViewMatrix = [];
@@ -199,33 +192,16 @@ Tetromino.prototype.addColorBuffer = function( gl, colorBuffer )
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(this.color), gl.STATIC_DRAW );
 }
 
-Tetromino.prototype.addTextureBuffer = function( gl, textureBuffer )
-{
-	var textureArray = [
-				vec2.fromValues(0, 0), vec2.fromValues(0, 1), vec2.fromValues(1, 1),
-				vec2.fromValues(0, 0), vec2.fromValues(1, 1), vec2.fromValues(1, 0) ];
-	
-	this.textureBuffer = textureBuffer;
-	gl.bindBuffer( gl.ARRAY_BUFFER, this.textureBuffer );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(textureArray), gl.STATIC_DRAW );
-}
 
-Tetromino.prototype.renderTetromino = function( gl, vPosition, vColor, vTexCoord, texture, modelViewMatrixLoc )
-{	
+Tetromino.prototype.renderTetromino = function( gl, vPosition, vColor, modelViewMatrixLoc )
+{
 	gl.bindBuffer( gl.ARRAY_BUFFER, this.vertexBuffer );
 	gl.vertexAttribPointer( vPosition, DIMENSIONS, gl.FLOAT, false, 0, 0 );		/// TODO Do something about DIMENSIONS and COLORDIMENSIONS
 		
-	gl.bindBuffer( gl.ARRAY_BUFFER, this.colorBuffer );
+	gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer );
 	gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );		/// TODO Do something about DIMENSIONS and COLORDIMENSIONS
-	
-	gl.bindBuffer( gl.ARRAY_BUFFER, this.textureBuffer );
-	gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0 );		// 2 dimensional texture position
-	
-//	gl.activeTexture(gl.TEXTURE0);
-//    gl.bindTexture(gl.TEXTURE_2D, texture);
-//    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
 		
 	gl.uniformMatrix4fv(modelViewMatrixLoc, false, new Float32Array(this.modelViewMatrix));
 		
-	gl.drawArrays( gl.TRIANGLES, 0, this.vertices.length/DIMENSIONS );
+	gl.drawArrays( gl.TRIANGLES, 0, this.vertices.length/DIMENSIONS );		/// TODO Do something about DIMENSIONS and COLORDIMENSIONS
 }

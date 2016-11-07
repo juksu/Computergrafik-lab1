@@ -7,10 +7,7 @@ var aspectRatio;		// aspect ratio of canvas
 var score = 0;
 
 var gl;
-var program;
 var renderID;
-
-var texture;
 
 var modelViewMatrixLoc;
 var perspectiveMatrixLoc;
@@ -43,7 +40,6 @@ var deltaYTranslate = 0;
 
 var vPosition;
 var vColor;
-var vTexCoord;
 
 var worldCoordinates;
 var tetromino;
@@ -65,7 +61,7 @@ function webGLstart()
 	aspectRatio = canvas.width/canvas.height;
 
 	//Load shaders and initialize attribute buffers
-	program = initShaders( gl, "vertex-shader", "fragment-shader" );
+	var program = initShaders( gl, "vertex-shader", "fragment-shader" );
 	gl.useProgram( program );	
 
 	setScalar(10);	// 10 is the standard size
@@ -78,17 +74,6 @@ function webGLstart()
 	vColor = gl.getAttribLocation( program, "vColor" );
 	gl.vertexAttribPointer( vColor, COLORDIMENSIONS, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
-    
-	vTexCoord = gl.getAttribLocation( program, "vTexCoord" );
-	gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0 );
-	gl.enableVertexAttribArray( vTexCoord ); 
-
-
-	var image = new Image();
-	image.onload = function() {
-		configureTexture( image );
-	}
-	image.src = "SA2011_black.gif"
 
 	modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
 	perspectiveMatrixLoc = gl.getUniformLocation(program, "perspectiveMatrix");
@@ -133,7 +118,7 @@ function render(now)	// requestAnimationFrame passes us the time since the page 
 			else
 			{
 				// render tetromino to avoid graphical glitch where the tetromino would dissappear for a frame
-				tetromino.renderTetromino( gl, vPosition, vColor, vTexCoord, texture, modelViewMatrixLoc );
+				tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
 				endOfTurn();
 			}
 		}	
@@ -143,7 +128,7 @@ function render(now)	// requestAnimationFrame passes us the time since the page 
 		moveTetromino();	
 	timeStart = now;
 	
-	tetromino.renderTetromino( gl, vPosition, vColor, vTexCoord, texture, modelViewMatrixLoc );
+	tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
 }
 
 function renderRowRemovement(now)
@@ -332,8 +317,6 @@ function addTetromino()
 			
 	tetromino.addVertexBuffer( gl, gl.createBuffer() );
 	tetromino.addColorBuffer( gl, gl.createBuffer() );
-	tetromino.addTextureBuffer( gl, gl.createBuffer() );
-//	tetromino.addTexture( gl, program )
 
 	lastFall = timeStart;
 
@@ -415,7 +398,7 @@ function moveTetromino()
 			
 			// we reached collision -> end of turn
 			// render tetromino once more to avoid glitch were the tetromino would vanish for a frame
-			tetromino.renderTetromino( gl, vPosition, vColor, vTexCoord, modelViewMatrixLoc );
+			tetromino.renderTetromino( gl, vPosition, vColor, modelViewMatrixLoc );
 			endOfTurn();
 		}
 	}
@@ -530,19 +513,4 @@ function checkRowsComplete()
 	rows.sort(function(a, b){return a-b});
 	
 	return rows;
-}
-
-function configureTexture( image ) {
-	texture = gl.createTexture();
-	gl.bindTexture( gl.TEXTURE_2D, texture );
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-	gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image );
-//	gl.generateMipmap( gl.TEXTURE_2D );
-	
-	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT );
-	
-//	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR );
-//	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
-
-	gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
 }
